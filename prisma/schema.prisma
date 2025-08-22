@@ -19,10 +19,11 @@ model User {
   role      Role      @default(USER)
   warehouses Warehouse[] @relation("UserWarehouses")
   stores     Store[]     @relation("UserStores")
-  transactions Transaction[]
+  orders Order[]
+  transactions Transaction[]  @relation("UserTransactions")
+  sessions  Session[]
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
-
 }
 
 enum Role {
@@ -42,6 +43,7 @@ model Warehouse {
   capacity   Int?
   inventories Inventory[]
   transactions Transaction[]
+  productInstances ProductInstance[]
   users      User[]       @relation("UserWarehouses")
   createdAt  DateTime     @default(now())
   updatedAt  DateTime     @updatedAt
@@ -56,6 +58,7 @@ model Store {
   location   String
   inventories Inventory[]
   transactions Transaction[]
+  productInstances ProductInstance[] 
   users      User[]       @relation("UserStores")
   createdAt  DateTime     @default(now())
   updatedAt  DateTime     @updatedAt
@@ -75,6 +78,10 @@ model Product {
   imageUrl   String?
   inventories Inventory[]
   transactions Transaction[]
+  orderItems OrderItem[]
+  supplier   Supplier? @relation(fields: [supplierId], references: [id])
+  supplierId String?
+  instances ProductInstance[]
   createdAt  DateTime     @default(now())
   updatedAt  DateTime     @updatedAt
 }
@@ -110,7 +117,7 @@ model Transaction {
   warehouseId String?
   store       Store?      @relation(fields: [storeId], references: [id])
   storeId     String?
-  createdBy   User        @relation(fields: [userId], references: [id])
+  createdBy   User       @relation("UserTransactions", fields: [userId], references: [id])
   userId      String
   approved    Boolean     @default(false)
   createdAt   DateTime    @default(now())
@@ -120,4 +127,188 @@ enum TransactionType {
   IMPORT      // nhập kho
   EXPORT      // xuất kho
   TRANSFER    // chuyển kho
+}
+
+
+// ==============================
+// ProductInstance (Tồn kho có imei (giá trị cao))
+// ==============================
+model ProductInstance {
+  id          String     @id @default(uuid())
+  product     Product    @relation(fields: [productId], references: [id])
+  productId   String
+  imei        String?    @unique   // với điện thoại/laptop
+  serial      String?    @unique   // với sản phẩm khác
+  status      InstanceStatus @default(IN_STOCK)
+  warehouse   Warehouse? @relation(fields: [warehouseId], references: [id])
+  warehouseId String?
+  store       Store?     @relation(fields: [storeId], references: [id])
+  storeId     String?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+}
+
+enum InstanceStatus {
+  IN_STOCK   // còn trong kho
+  TRANSFERRED // đang chuyển kho
+  SOLD       // đã bán
+  RETURNED   // hàng trả lại
+}
+
+// ==============================
+// Customer (Khách hàng)
+// ==============================
+model Customer {
+  id        String   @id @default(uuid())
+  name      String
+  phone     String   @unique
+  email     String?  @unique
+  address   String?
+  orders    Order[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+}
+
+
+// ==============================
+// Order (Đơn hàng)
+// ==============================
+
+model Order {
+  id        String     @id @default(uuid())
+  customer  Customer   @relation(fields: [customerId], references: [id])
+  customerId String
+  user      User       @relation(fields: [userId], references: [id]) // nhân viên tạo đơn
+  userId    String
+  status    OrderStatus @default(PENDING)
+  items     OrderItem[]
+  total     Float
+  payments  Payment[]
+  shipments Shipment[]
+  createdAt DateTime   @default(now())
+}
+
+model OrderItem {
+  id        String   @id @default(uuid())
+  order     Order    @relation(fields: [orderId], references: [id])
+  orderId   String
+  product   Product  @relation(fields: [productId], references: [id])
+  productId String
+  quantity  Int
+  price     Float
+}
+
+enum OrderStatus {
+  PENDING
+  PAID
+  CANCELLED
+  COMPLETED
+}
+
+// ==============================
+// Finance (Tài chính / Thanh toán)
+// ==============================
+
+model Payment {
+  id        String   @id @default(uuid())
+  order     Order?   @relation(fields: [orderId], references: [id])
+  orderId   String?
+  amount    Float
+  method    PaymentMethod
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+}
+
+enum PaymentMethod {
+  CASH
+  BANK_TRANSFER
+  CREDIT_CARD
+}
+
+model Shipment {
+  id        String   @id @default(uuid())
+  order     Order    @relation(fields: [orderId], references: [id])
+  orderId   String
+  driver    Driver?  @relation(fields: [driverId], references: [id])
+  driverId  String?
+  vehicle   Vehicle? @relation(fields: [vehicleId], references: [id])
+  vehicleId String?
+  route     Route?   @relation(fields: [routeId], references: [id])
+  routeId   String?
+  status    ShipmentStatus @default(PENDING)
+  tracking  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+}
+
+
+enum ShipmentStatus {
+  PENDING
+  IN_TRANSIT
+  DELIVERED
+  RETURNED
+}
+
+model Supplier {
+  id        String        @id @default(uuid())
+  name      String
+  phone     String?
+  email     String?
+  address   String?
+  products  Product[]    
+  createdAt DateTime      @default(now())
+  updatedAt DateTime @updatedAt
+
+}
+
+model Vehicle {
+  id        String   @id @default(uuid())
+  plate     String   @unique
+  type      String
+  capacity  Int?
+  drivers   Driver[]
+  shipments Shipment[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+}
+
+model Driver {
+  id        String   @id @default(uuid())
+  name      String
+  phone     String   @unique
+  license   String?
+  vehicle   Vehicle? @relation(fields: [vehicleId], references: [id])
+  vehicleId String?
+  shipments Shipment[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+}
+
+model Route {
+  id        String    @id @default(uuid())
+  name      String
+  origin    String
+  destination String
+  shipments Shipment[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+// ==============================
+// Session
+// ==============================
+model Session {
+  id        String   @id @default(uuid()) 
+  userId    String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId])
 }

@@ -13,12 +13,17 @@
     "@prisma/client": "^6.14.0",
     "bcrypt": "^6.0.0",
     "clsx": "^2.1.1",
+    "jose": "^6.0.13",
     "jsonwebtoken": "^9.0.2",
     "lucide-react": "^0.539.0",
-    "next": "15.4.6",
+    "next": "15.4.2-canary.56",
+    "next-auth": "5.0.0-beta.29",
     "react": "19.1.0",
     "react-dom": "19.1.0",
-    "tailwind-scrollbar-hide": "^4.0.0"
+    "react-hot-toast": "^2.6.0",
+    "tailwind-scrollbar-hide": "^4.0.0",
+    "use-debounce": "^10.0.5",
+    "zod": "^4.0.17"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
