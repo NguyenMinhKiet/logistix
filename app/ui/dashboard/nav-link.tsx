@@ -59,11 +59,16 @@ const settingsLinks = [
 // navlinks
 const links = [
     { name: 'Trang chính', href: '/dashboard', icon: HomeIcon },
-    { name: 'Quản lý vận tải', icon: TruckIcon, subLinks: shipmentLinks },
-    { name: 'Quản lý kho', icon: BuildingStorefrontIcon, subLinks: inventoryLinks },
-    { name: 'Quản lý khách hàng & đối tác', icon: UserGroupIcon, subLinks: customerLinks },
-    { name: 'Hệ thống & cấu hình', icon: Cog6ToothIcon, subLinks: settingsLinks },
-    { name: 'Tài chính', icon: CurrencyDollarIcon, subLinks: financeLinks },
+    { name: 'Quản lý vận tải', href: '/dashboard/shipments', icon: TruckIcon, subLinks: shipmentLinks },
+    { name: 'Quản lý kho', href: '/dashboard/inventories', icon: BuildingStorefrontIcon, subLinks: inventoryLinks },
+    {
+        name: 'Quản lý khách hàng & đối tác',
+        href: '/dashboard/customers',
+        icon: UserGroupIcon,
+        subLinks: customerLinks,
+    },
+    { name: 'Hệ thống & cấu hình', href: '/dashboard/settings', icon: Cog6ToothIcon, subLinks: settingsLinks },
+    { name: 'Tài chính', href: '/dashboard/finances', icon: CurrencyDollarIcon, subLinks: financeLinks },
 ];
 
 export default function NavLinks() {
@@ -103,7 +108,8 @@ export default function NavLinks() {
                         return (
                             <div key={link.name}>
                                 {/* Menu cha */}
-                                <div
+                                <Link
+                                    href={link.href}
                                     onClick={() => link.subLinks && toggleMenu(link.name)}
                                     className={clsx(
                                         'flex items-center justify-between p-2 cursor-pointer rounded-md hover:bg-sky-100',
@@ -119,7 +125,7 @@ export default function NavLinks() {
                                             <div className="w-0 h-0 border-t-[6px] border-b-[6px] border-l-[10px] border-t-transparent border-b-transparent border-l-black"></div>
                                         </span>
                                     )}
-                                </div>
+                                </Link>
 
                                 {/* Submenu */}
                                 {link.subLinks && isOpen && (
@@ -172,7 +178,8 @@ export default function NavLinks() {
                             <div key={link.name}>
                                 {/* Menu cha */}
                                 {link.subLinks ? (
-                                    <div
+                                    <Link
+                                        href={link.href}
                                         onClick={() => toggleMenu(link.name)}
                                         className={clsx(
                                             'flex items-center justify-between gap-2 p-2 rounded-md cursor-pointer hover:bg-sky-100',
@@ -186,7 +193,7 @@ export default function NavLinks() {
                                         <span className={clsx('transition-transform', isOpen && 'rotate-90')}>
                                             <div className="w-0 h-0 border-t-[6px] border-b-[6px] border-l-[10px] border-t-transparent border-b-transparent border-l-black"></div>
                                         </span>
-                                    </div>
+                                    </Link>
                                 ) : (
                                     <Link
                                         href={link.href!}
