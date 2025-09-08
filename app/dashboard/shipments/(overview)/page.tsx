@@ -1,8 +1,8 @@
 'use client';
+
 import { formatNumber } from '@/app/lib/format';
 import ButtonAction from '@/app/ui/buttons/ButtonAction';
 import ButtonInput from '@/app/ui/buttons/ButtonInput';
-import Button from '@/app/ui/buttons/ButtonInput';
 import Card from '@/app/ui/dashboard/Card';
 import { CardSkeleton } from '@/app/ui/dashboard/skeleton';
 import TrendIndicator from '@/app/ui/dashboard/TrendIndicator';
@@ -10,11 +10,13 @@ import {
     ArchiveBoxArrowDownIcon,
     ArrowUpTrayIcon,
     CalendarDateRangeIcon,
+    ChevronRightIcon,
     ClockIcon,
     MagnifyingGlassIcon,
     MapPinIcon,
     PlusIcon,
     TruckIcon,
+    UsersIcon,
     WalletIcon,
 } from '@heroicons/react/24/outline';
 import { Suspense, useEffect, useState } from 'react';
@@ -26,9 +28,6 @@ import {
     YAxis,
     CartesianGrid,
     Tooltip,
-    PieChart,
-    Pie,
-    Cell,
     BarChart,
     Legend,
     Bar,
@@ -36,6 +35,9 @@ import {
 import Image from 'next/image';
 import CardWrapper from '@/app/ui/dashboard/CardWrapper';
 import Select from '@/app/ui/buttons/Select';
+import clsx from 'clsx';
+import { wrapper } from '@/app/styles/classes';
+import Breadcrumb from '@/app/ui/Breadcrumb';
 
 function CustomTooltip({ active, payload, label }: any) {
     if (active && payload && payload.length) {
@@ -56,6 +58,7 @@ function CustomTooltip({ active, payload, label }: any) {
 
 export default function ShipmentDashboardPage() {
     const [session, setSession] = useState<any>(null);
+    const [searchBtn, setSearchBtn] = useState('');
 
     useEffect(() => {
         const loadSession = async () => {
@@ -147,19 +150,65 @@ export default function ShipmentDashboardPage() {
     const totalOnDelivery = data.reduce((sum, item) => sum + item.onDelivery, 0);
 
     return (
-        <div className="grid ">
-            <div className="flex justify-between w-full ">
+        <>
+            {/* Header */}
+            <div className="h-40 mb-3 grid grid-cols-2 bg-gradient-to-r from-blue-400 to-indigo-500  text-white">
+                {/* Breadcrumb */}
+                <Breadcrumb preList={[{ name: 'Dashboard', link: '/dashboard' }]} current="Shipments" />
+
+                <div className="flex flex-col p-5 justify-end items-end">
+                    <div className="flex gap-3">
+                        {/* Card */}
+                        <div className="flex flex-col shadow-md rounded-xl p-2 px-3 w-52 bg-white/50 text-black">
+                            <h1 className="text-gray-700">Total Drivers</h1>
+                            <div className="flex justify-between items-center">
+                                <span className="font-semibold text-xl">30</span>
+                                <div className="flex items-center justify-center rounded-full border border-white p-2 bg-white">
+                                    <UsersIcon className="w-5 h-5" />
+                                </div>
+                            </div>
+                        </div>
+                        {/* Card */}
+                        <div className="flex flex-col shadow-md rounded-xl p-2 px-3 w-52 bg-white/50 text-black">
+                            <h1 className="text-gray-700">Busy</h1>
+                            <div className="flex justify-between items-center">
+                                <span className="font-semibold text-xl">30</span>
+                                <div className="flex items-center justify-center rounded-full border border-white p-2 bg-white">
+                                    <UsersIcon className="w-5 h-5 text-amber-500" />
+                                </div>
+                            </div>
+                        </div>
+                        {/* Card */}
+                        <div className="flex flex-col shadow-md rounded-xl p-2 px-3 w-52 bg-white/50 text-black">
+                            <h1 className="text-gray-700">Free</h1>
+                            <div className="flex justify-between items-center">
+                                <span className="font-semibold text-xl">30</span>
+                                <div className="flex items-center justify-center rounded-full border border-white p-2 bg-white">
+                                    <UsersIcon className="w-5 h-5 text-green-500" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div className="flex justify-between w-full px-5">
                 <h1 className="text-2xl font-medium">Overview</h1>
                 <div className="flex gap-3">
                     {/* Search Box */}
-                    <div className="flex items-center gap-2 border border-gray-300 p-2 rounded-xl bg-white shadow-sm">
+                    {/* <div className="flex items-center gap-2 border border-gray-300 p-2 rounded-xl bg-white shadow-sm">
                         <MagnifyingGlassIcon className="w-5 h-5 text-gray-500 cursor-pointer" />
                         <input
                             type="text"
                             placeholder="Tìm kiếm..."
                             className="w-full outline-none text-sm text-gray-700 placeholder-gray-400"
                         />
-                    </div>
+                    </div> */}
+                    <ButtonInput
+                        Icon={MagnifyingGlassIcon}
+                        type="text"
+                        value={searchBtn}
+                        onChange={(e) => setSearchBtn(e.target.value)}
+                    />
 
                     {/* Calculate Box */}
                     <ButtonInput
@@ -323,135 +372,131 @@ export default function ShipmentDashboardPage() {
                 </div>
 
                 <div className="mt-5">
-                    <CardWrapper>
-                        <div className="grid grid-cols-3 gap-4 p-4">
-                            {/* Left Column */}
-                            <div className="col-span-2">
-                                {/* Tabs */}
-                                <div className="grid grid-cols-4 mb-4">
-                                    <button className="cursor-pointer pb-2 border-b-2 border-green-500 text-green-600 hover:border-green-500 hover:text-green-600">
-                                        Followed Shipment
-                                    </button>
-                                    <button className="cursor-pointer pb-2 border-b-2 border-gray-200 text-gray-500 hover:border-green-500 hover:text-green-600">
-                                        Delay Shipment
-                                    </button>
-                                    <button className="cursor-pointer pb-2 border-b-2 border-gray-2    00 text-gray-500 hover:border-green-500 hover:text-green-600">
-                                        Last Update
-                                    </button>
-                                    <div className="flex justify-end">
-                                        <Select
-                                            Icon={CalendarDateRangeIcon}
-                                            value={monthCarTable}
-                                            onChange={(val) => setMonthCarTable(val)}
-                                            options={[
-                                                { label: 'Monthly', value: 'month' },
-                                                { label: 'Weekly', value: 'week' },
-                                            ]}
-                                        />
-                                    </div>
-                                </div>
-
-                                {/* Card Shipment */}
-                                <div className="flex flex-col gap-3  max-h-[800px] overflow-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-                                    {cardData.map((card) => {
-                                        const stepIndex = steps.indexOf(card.currentStep);
-                                        const progress = (stepIndex / (steps.length - 1)) * 100;
-
-                                        return (
-                                            <CardWrapper
-                                                key={card.id}
-                                                status={carSelected === card.id ? 'success' : undefined}
-                                                onClick={() => setCarSelected(card.id)}
-                                            >
-                                                <div className="p-4 cursor-pointer hover:bg-gray-100 rounded-xl">
-                                                    <div className="flex items-center justify-between">
-                                                        {/* Left info */}
-                                                        <div className="space-y-2">
-                                                            <div className="flex items-center gap-3">
-                                                                <h3 className="font-semibold">{card.id}</h3>
-                                                                <span
-                                                                    className={`flex items-center gap-1 text-sm px-2 py-0.5 rounded bg-${card.status.color}-100 text-${card.status.color}-600`}
-                                                                >
-                                                                    <span
-                                                                        className={`w-2 h-2 rounded-full bg-${card.status.color}-600`}
-                                                                    />
-                                                                    {card.status.label}
-                                                                </span>
-                                                            </div>
-
-                                                            <div className="flex flex-wrap gap-4 text-sm text-gray-500">
-                                                                <div className="flex items-center gap-1">
-                                                                    <MapPinIcon className="w-4 h-4" />
-                                                                    {card.route}
-                                                                </div>
-                                                                <div className="flex items-center gap-1">
-                                                                    <ClockIcon className="w-4 h-4" />
-                                                                    ETA: {card.eta}
-                                                                </div>
-                                                            </div>
-                                                        </div>
-
-                                                        <Image
-                                                            alt="Truck"
-                                                            src={card.image}
-                                                            width={160}
-                                                            height={80}
-                                                            className="object-contain"
-                                                        />
-                                                    </div>
-
-                                                    {/* Progress */}
-                                                    <div className="mt-4">
-                                                        <div className="flex items-center justify-between">
-                                                            <span className="text-sm text-gray-500">
-                                                                Shipment Progress
-                                                            </span>
-                                                            <span className="text-sm font-medium">
-                                                                {Math.round(progress)}%
-                                                            </span>
-                                                        </div>
-                                                        <div className="w-full h-2 bg-gray-200 rounded mt-1">
-                                                            <div
-                                                                className="h-2 bg-blue-500 rounded"
-                                                                style={{ width: `${progress}%` }}
-                                                            />
-                                                        </div>
-                                                    </div>
-
-                                                    {/* Steps */}
-                                                    <div className="flex justify-between text-xs mt-4 text-gray-500">
-                                                        {steps.map((step, idx) => (
-                                                            <span
-                                                                key={idx}
-                                                                className={
-                                                                    idx <= stepIndex ? 'text-blue-600 font-medium' : ''
-                                                                }
-                                                            >
-                                                                {step}
-                                                            </span>
-                                                        ))}
-                                                    </div>
-                                                </div>
-                                            </CardWrapper>
-                                        );
-                                    })}
-                                </div>
-                            </div>
-                            {/* Cột phải: Map View */}
-                            <div className="col-span-1 border rounded-xl shadow-sm">
-                                <div className="h-full w-full">
-                                    {/* Bản đồ nhúng (Google Maps hoặc Mapbox) */}
-                                    <iframe
-                                        src="https://www.google.com/maps/embed?pb=..."
-                                        className="w-full h-full rounded-xl"
-                                        loading="lazy"
+                    <div className={clsx(`${wrapper} grid grid-cols-3 gap-4 p-4`)}>
+                        {/* Left Column */}
+                        <div className="col-span-2">
+                            {/* Tabs */}
+                            <div className="grid grid-cols-4 mb-4">
+                                <button className="cursor-pointer pb-2 border-b-2 border-green-500 text-green-600 hover:border-green-500 hover:text-green-600">
+                                    Followed Shipment
+                                </button>
+                                <button className="cursor-pointer pb-2 border-b-2 border-gray-200 text-gray-500 hover:border-green-500 hover:text-green-600">
+                                    Delay Shipment
+                                </button>
+                                <button className="cursor-pointer pb-2 border-b-2 border-gray-2    00 text-gray-500 hover:border-green-500 hover:text-green-600">
+                                    Last Update
+                                </button>
+                                <div className="flex justify-end">
+                                    <Select
+                                        Icon={CalendarDateRangeIcon}
+                                        value={monthCarTable}
+                                        onChange={(val) => setMonthCarTable(val)}
+                                        options={[
+                                            { label: 'Monthly', value: 'month' },
+                                            { label: 'Weekly', value: 'week' },
+                                        ]}
                                     />
                                 </div>
                             </div>
+
+                            {/* Card Shipment */}
+                            <div className="flex flex-col gap-3  max-h-[800px] overflow-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+                                {cardData.map((card) => {
+                                    const stepIndex = steps.indexOf(card.currentStep);
+                                    const progress = (stepIndex / (steps.length - 1)) * 100;
+
+                                    return (
+                                        <CardWrapper
+                                            key={card.id}
+                                            status={carSelected === card.id ? 'success' : undefined}
+                                            onClick={() => setCarSelected(card.id)}
+                                        >
+                                            <div className="p-4 cursor-pointer hover:bg-gray-100 rounded-xl">
+                                                <div className="flex items-center justify-between">
+                                                    {/* Left info */}
+                                                    <div className="space-y-2">
+                                                        <div className="flex items-center gap-3">
+                                                            <h3 className="font-semibold">{card.id}</h3>
+                                                            <span
+                                                                className={`flex items-center gap-1 text-sm px-2 py-0.5 rounded bg-${card.status.color}-100 text-${card.status.color}-600`}
+                                                            >
+                                                                <span
+                                                                    className={`w-2 h-2 rounded-full bg-${card.status.color}-600`}
+                                                                />
+                                                                {card.status.label}
+                                                            </span>
+                                                        </div>
+
+                                                        <div className="flex flex-wrap gap-4 text-sm text-gray-500">
+                                                            <div className="flex items-center gap-1">
+                                                                <MapPinIcon className="w-4 h-4" />
+                                                                {card.route}
+                                                            </div>
+                                                            <div className="flex items-center gap-1">
+                                                                <ClockIcon className="w-4 h-4" />
+                                                                ETA: {card.eta}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    <Image
+                                                        alt="Truck"
+                                                        src={card.image}
+                                                        width={160}
+                                                        height={80}
+                                                        className="object-contain"
+                                                    />
+                                                </div>
+
+                                                {/* Progress */}
+                                                <div className="mt-4">
+                                                    <div className="flex items-center justify-between">
+                                                        <span className="text-sm text-gray-500">Shipment Progress</span>
+                                                        <span className="text-sm font-medium">
+                                                            {Math.round(progress)}%
+                                                        </span>
+                                                    </div>
+                                                    <div className="w-full h-2 bg-gray-200 rounded mt-1">
+                                                        <div
+                                                            className="h-2 bg-blue-500 rounded"
+                                                            style={{ width: `${progress}%` }}
+                                                        />
+                                                    </div>
+                                                </div>
+
+                                                {/* Steps */}
+                                                <div className="flex justify-between text-xs mt-4 text-gray-500">
+                                                    {steps.map((step, idx) => (
+                                                        <span
+                                                            key={idx}
+                                                            className={
+                                                                idx <= stepIndex ? 'text-blue-600 font-medium' : ''
+                                                            }
+                                                        >
+                                                            {step}
+                                                        </span>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        </CardWrapper>
+                                    );
+                                })}
+                            </div>
                         </div>
-                    </CardWrapper>
+                        {/* Cột phải: Map View */}
+                        <div className="col-span-1 border rounded-xl shadow-sm">
+                            <div className="h-full w-full">
+                                {/* Bản đồ nhúng (Google Maps hoặc Mapbox) */}
+                                <iframe
+                                    src="https://www.google.com/maps/embed?pb=..."
+                                    className="w-full h-full rounded-xl"
+                                    loading="lazy"
+                                />
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
-        </div>
+        </>
     );
 }

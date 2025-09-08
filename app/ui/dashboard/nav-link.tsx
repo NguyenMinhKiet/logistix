@@ -25,10 +25,10 @@ import { MenuIcon } from 'lucide-react';
 
 // Shipments
 const shipmentLinks = [
-    { name: 'Đơn hàng', href: '/orders', icon: InboxIcon },
-    { name: 'Xe', href: '/cars', icon: TruckIcon },
-    { name: 'Tài xế', href: '/drivers', icon: UserGroupIcon },
-    { name: 'Tuyến đường', href: '/routes', icon: MapIcon },
+    { name: 'Đơn hàng', href: 'shipments/orders', icon: InboxIcon },
+    { name: 'Xe', href: 'shipments/cars', icon: TruckIcon },
+    { name: 'Tài xế', href: 'shipments/drivers', icon: UserGroupIcon },
+    { name: 'Tuyến đường', href: 'shipments/routes', icon: MapIcon },
 ];
 
 // Inventory

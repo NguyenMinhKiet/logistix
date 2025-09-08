@@ -3,14 +3,13 @@ import { useRef } from 'react';
 import clsx from 'clsx';
 
 interface ButtonProps {
-    Icon: React.ElementType;
+    Icon?: React.ElementType;
     type: string;
     value?: string | number;
     iconColor?: string;
     bgColor?: string;
     borderColor?: string;
     placeHolder?: string;
-
     onClick?: () => void;
     onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }
@@ -33,15 +32,8 @@ function ButtonInput({
             // focus input
             inputRef.current.focus();
 
-            if (typeof inputRef.current.showPicker === 'function') {
-                try {
-                    inputRef.current.showPicker();
-                    return;
-                } catch (err: unknown) {
-                    if (err instanceof Error) {
-                        console.log('Button Component Error: ', err.message);
-                    } else console.log('Button Component Error: ', err);
-                }
+            if (inputRef.current.type === 'date') {
+                inputRef.current.showPicker();
             }
 
             // fallback click (để text/number cũng focus và mở bàn phím mobile)
@@ -57,14 +49,18 @@ function ButtonInput({
                 `flex items-center gap-2 border ${borderColor} p-2 rounded-xl ${bgColor} shadow-sm cursor-pointer`,
             )}
         >
-            <Icon className={clsx(`w-5 h-5 ${iconColor}`)} />
+            {Icon && <Icon className={clsx(`w-5 h-5 ${iconColor}`)} />}
             <input
                 ref={inputRef}
                 type={type}
                 onChange={onChange}
                 placeholder={placeHolder}
                 value={value}
-                className="w-full outline-none text-sm text-gray-700 placeholder-gray-400 cursor-pointer bg-transparent"
+                className={clsx(
+                    'outline-none border-none text-sm text-gray-700 placeholder-gray-400 cursor-pointer bg-transparent',
+                    type === 'checkbox' &&
+                        'appearance-none w-5 h-5 border-2 border-gray-300 rounded-md checked:bg-gray-500 checked:border-gray-500',
+                )}
             />
         </div>
     );

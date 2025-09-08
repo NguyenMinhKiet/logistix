@@ -39,6 +39,12 @@ export enum ShipmentStatus {
     RETURNED = 'RETURNED',
 }
 
+export enum DriverBadge {
+    BUSY = 'BUSY',
+    FREE = 'FREE',
+    OFFLINE = 'OFFLINE',
+}
+
 // Interfaces
 export interface User {
     id: string;
@@ -222,7 +228,9 @@ export interface Vehicle {
 export interface Driver {
     id: string;
     name: string;
+    imageUrl?: string;
     phone: string;
+    badge: DriverBadge;
     license?: string;
     vehicle?: Vehicle;
     vehicleId?: string;

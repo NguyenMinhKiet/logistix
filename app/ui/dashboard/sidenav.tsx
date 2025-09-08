@@ -5,14 +5,14 @@ import { PowerIcon, UserIcon } from '@heroicons/react/24/outline';
 import clsx from 'clsx';
 import Link from 'next/link';
 import Logo from '@/app/ui/logo';
-import { toast } from 'react-hot-toast';
 import { useEffect, useState } from 'react';
 import { logout } from '@/app/lib/authActions';
+import { useRouter } from 'next/navigation';
 
 export default function SideNav() {
     const [loading, setLoading] = useState(false);
     const [username, setUsername] = useState('');
-
+    const router = useRouter();
     useEffect(() => {
         fetch('/api/auth/session')
             .then((res) => res.json())
@@ -21,17 +21,17 @@ export default function SideNav() {
 
     const handleSignOut = async () => {
         setLoading(true);
-        toast.loading('Đang đăng xuất...', { id: 'signout', duration: Infinity });
-        try {
-            await logout();
-            toast.success('Đăng xuất thành công!', { id: 'signout', duration: 2000 });
-        } catch (error: any) {
-            toast.error(`Đăng xuất thất bại: ${error.message}`, { id: 'signout', duration: 3000 });
-        } finally {
-            setLoading(false);
-        }
-    };
 
+        const res = await logout();
+
+        if (res.success) {
+            // redirect client luôn
+            router.push(`/login?status=success&message=${encodeURIComponent(res.message)}`);
+        } else {
+        }
+
+        setLoading(false);
+    };
     return (
         <div
             className={clsx(

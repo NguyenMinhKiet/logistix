@@ -1,10 +1,11 @@
 'use client';
 
-import { ChangeEvent, useActionState, useState } from 'react';
+import { ChangeEvent, useActionState, useEffect, useState } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
 import Link from 'next/link';
 import { signIn } from '@/app/lib/authActions';
 import clsx from 'clsx';
+import { useRouter } from 'next/navigation';
 
 interface LoginFormData {
     email: string;
@@ -13,9 +14,15 @@ interface LoginFormData {
 
 export default function LoginForm() {
     const [state, formAction, isPending] = useActionState(signIn, undefined);
-
+    const router = useRouter();
     const [showPassword, setShowPassword] = useState(false);
     const togglePasswordVisibility = (): void => setShowPassword((prev) => !prev);
+
+    useEffect(() => {
+        if (state?.message && state?.success) {
+            router.push('/dashboard?status=success&message=' + encodeURIComponent('Đăng nhập thành công')); // client redirect
+        }
+    }, [state, router]);
 
     const [formData, setFormData] = useState<LoginFormData>({
         email: '',

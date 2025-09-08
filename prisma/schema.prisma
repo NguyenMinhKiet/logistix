@@ -14,6 +14,7 @@ datasource db {
 model User {
   id        String    @id @default(uuid())
   name      String
+  imageUrl  String?
   email     String    @unique
   password  String
   role      Role      @default(USER)
@@ -40,6 +41,7 @@ model Warehouse {
   id         String       @id @default(uuid())
   name       String
   location   String
+  imageUrl  String?
   capacity   Int?
   inventories Inventory[]
   transactions Transaction[]
@@ -56,6 +58,7 @@ model Store {
   id         String       @id @default(uuid())
   name       String
   location   String
+  imageUrl  String?
   inventories Inventory[]
   transactions Transaction[]
   productInstances ProductInstance[] 
@@ -110,6 +113,7 @@ model Inventory {
 model Transaction {
   id          String      @id @default(uuid())
   type        TransactionType
+  imageUrl  String?
   product     Product     @relation(fields: [productId], references: [id])
   productId   String
   quantity    Int
@@ -160,6 +164,7 @@ enum InstanceStatus {
 // ==============================
 model Customer {
   id        String   @id @default(uuid())
+  imageUrl  String?
   name      String
   phone     String   @unique
   email     String?  @unique
@@ -181,6 +186,7 @@ model Order {
   customerId String
   user      User       @relation(fields: [userId], references: [id]) // nhân viên tạo đơn
   userId    String
+  imageUrl  String?
   status    OrderStatus @default(PENDING)
   items     OrderItem[]
   total     Float
@@ -267,6 +273,7 @@ model Supplier {
 model Vehicle {
   id        String   @id @default(uuid())
   plate     String   @unique
+  imageUrl  String?
   type      String
   capacity  Int?
   drivers   Driver[]
@@ -279,6 +286,8 @@ model Vehicle {
 model Driver {
   id        String   @id @default(uuid())
   name      String
+  imageUrl  String?
+  badge     DriverBadge @default(FREE)
   phone     String   @unique
   license   String?
   vehicle   Vehicle? @relation(fields: [vehicleId], references: [id])
@@ -287,6 +296,11 @@ model Driver {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+}
+enum DriverBadge {
+  BUSY
+  FREE
+  OFFLINE
 }
 
 model Route {

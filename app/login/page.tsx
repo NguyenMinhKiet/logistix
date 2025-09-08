@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 export default function LoginPage() {
     return (
         <>
-            <div className="min-h-screen bg-gradient-to-br from-blue-500 via-indigo-500 to-purple-500 flex items-center justify-center p-2 sm:p-4 lg:p-8">
+            <div className="min-h-screen bg-gray-100 flex items-center justify-center p-2 sm:p-4 lg:p-8">
                 {/* Background Pattern */}
                 <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3C svg width=60 height=60 viewBox=0 0 60 60 xmlns=http://www.w3.org/2000/svg%3E%3Cg fill=none fill-rule=evenodd%3E%3Cg fill=%239C92AC fill-opacity=0.05%3E%3Ccircle cx=30 cy=30 r=2/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] opacity-40"></div>
 

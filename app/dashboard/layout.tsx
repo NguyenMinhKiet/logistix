@@ -19,7 +19,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             <div className={clsx(` flex-none md:h-full w-full md:w-64`)}>
                 <SideNav />
             </div>
-            <div className="flex-grow p-6 md:overflow-y-auto md:p-12 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+            <div className="flex-grow md:overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
                 {children}
             </div>
         </div>
