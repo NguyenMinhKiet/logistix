@@ -4,7 +4,7 @@ import { EllipsisHorizontalIcon } from '@heroicons/react/24/outline';
 import Image from 'next/image';
 import clsx from 'clsx';
 import { wrapper } from '../styles/classes';
-import { DriverBadge } from '../types';
+import { DriverBadge } from '@prisma/client';
 
 type UserCardProps = {
     image: string;

@@ -3,7 +3,7 @@
 import { db } from '@/app/lib/db';
 import bcrypt from 'bcrypt';
 
-export async function CreateUser(name: string, email: string, password: string) {
+export async function createUser(name: string, email: string, password: string) {
     const isExistingUser = await db.user.findUnique({ where: { email } });
     if (isExistingUser) throw { field: 'email', message: `Email '${email}' đã tồn tại !`, status: 409 };
     return await db.user.create({
@@ -15,7 +15,7 @@ export async function CreateUser(name: string, email: string, password: string) 
     });
 }
 
-export async function Authorize(email: string, password: string) {
+export async function authorize(email: string, password: string) {
     const user = await db.user.findUnique({ where: { email } });
     if (!user) throw { field: 'email', message: 'User not found', status: 404 };
     const isValid = await bcrypt.compare(password, user.password);

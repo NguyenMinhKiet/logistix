@@ -1,5 +1,5 @@
+import { InstanceStatus, OrderStatus, PaymentMethod, ShipmentStatus, TransactionType } from '@prisma/client';
 import { z } from 'zod';
-import { TransactionType, InstanceStatus, OrderStatus, PaymentMethod, ShipmentStatus } from '@/app/types/index';
 
 // User Form Schema
 export const UserFormSchema = z.object({
@@ -168,7 +168,6 @@ export const DriverFormSchema = z.object({
     name: z.string().min(1, { message: 'Please enter a driver name.' }),
     phone: z.string().min(1, { message: 'Please enter a phone number.' }),
     license: z.string().min(1, { message: 'Please enter a license number.' }).optional(),
-    vehicleId: z.string().min(1, { message: 'Please select a vehicle.' }).optional(),
 });
 
 // Route Form Schema

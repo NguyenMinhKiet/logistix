@@ -1,68 +1,31 @@
-// Enums
-export enum Role {
-    ADMIN = 'ADMIN',
-    MANAGER = 'MANAGER',
-    STAFF = 'STAFF',
-    USER = 'USER',
-}
-
-export enum TransactionType {
-    IMPORT = 'IMPORT',
-    EXPORT = 'EXPORT',
-    TRANSFER = 'TRANSFER',
-}
-
-export enum InstanceStatus {
-    IN_STOCK = 'IN_STOCK',
-    TRANSFERRED = 'TRANSFERRED',
-    SOLD = 'SOLD',
-    RETURNED = 'RETURNED',
-}
-
-export enum OrderStatus {
-    PENDING = 'PENDING',
-    PAID = 'PAID',
-    CANCELLED = 'CANCELLED',
-    COMPLETED = 'COMPLETED',
-}
-
-export enum PaymentMethod {
-    CASH = 'CASH',
-    BANK_TRANSFER = 'BANK_TRANSFER',
-    CREDIT_CARD = 'CREDIT_CARD',
-}
-
-export enum ShipmentStatus {
-    PENDING = 'PENDING',
-    IN_TRANSIT = 'IN_TRANSIT',
-    DELIVERED = 'DELIVERED',
-    RETURNED = 'RETURNED',
-}
-
-export enum DriverBadge {
-    BUSY = 'BUSY',
-    FREE = 'FREE',
-    OFFLINE = 'OFFLINE',
-}
+import {
+    $Enums,
+    InstanceStatus,
+    OrderStatus,
+    PaymentMethod,
+    Role,
+    ShipmentStatus,
+    TransactionType,
+} from '@prisma/client';
 
 // Interfaces
 export interface User {
     id: string;
     name: string;
     email: string;
-    password?: string;
+    password: string;
     role: Role;
-    warehouses?: Warehouse[];
-    stores?: Store[];
-    createdAt?: Date;
-    updatedAt?: Date;
+    warehouses?: Warehouse[] | null;
+    stores?: Store[] | null;
+    createdAt: Date;
+    updatedAt: Date;
 }
 
 export interface Warehouse {
     id: string;
     name: string;
     location: string;
-    capacity?: number;
+    capacity?: number | null;
     inventories: Inventory[];
     transactions: Transaction[];
     users: User[];
@@ -85,15 +48,15 @@ export interface Product {
     id: string;
     name: string;
     sku: string;
-    category?: string;
+    category?: string | null;
     priceIn: number;
     priceOut: number;
     unit: string;
-    imageUrl?: string;
+    imageUrl?: string | null;
     inventories: Inventory[];
     transactions: Transaction[];
-    supplier?: Supplier;
-    supplierId?: string;
+    supplier?: Supplier | null;
+    supplierId?: string | null;
     instances: ProductInstance[];
     createdAt: Date;
     updatedAt: Date;
@@ -103,8 +66,8 @@ export interface Inventory {
     id: string;
     product: Product;
     productId: string;
-    warehouse?: Warehouse;
-    warehouseId?: string;
+    warehouse?: Warehouse | null;
+    warehouseId?: string | null;
     store?: Store;
     storeId?: string;
     quantity: number;
@@ -118,10 +81,10 @@ export interface Transaction {
     product: Product;
     productId: string;
     quantity: number;
-    warehouse?: Warehouse;
-    warehouseId?: string;
-    store?: Store;
-    storeId?: string;
+    warehouse?: Warehouse | null;
+    warehouseId?: string | null;
+    store?: Store | null;
+    storeId?: string | null;
     createdBy: User;
     userId: string;
     approved: boolean;
@@ -132,13 +95,13 @@ export interface ProductInstance {
     id: string;
     product: Product;
     productId: string;
-    imei?: string;
-    serial?: string;
+    imei?: string | null;
+    serial?: string | null;
     status: InstanceStatus;
-    warehouse?: Warehouse;
-    warehouseId?: string;
-    store?: Store;
-    storeId?: string;
+    warehouse?: Warehouse | null;
+    warehouseId?: string | null;
+    store?: Store | null;
+    storeId?: string | null;
     createdAt: Date;
     updatedAt: Date;
 }
@@ -147,8 +110,8 @@ export interface Customer {
     id: string;
     name: string;
     phone: string;
-    email?: string;
-    address?: string;
+    email?: string | null;
+    address?: string | null;
     orders: Order[];
     createdAt: Date;
     updatedAt: Date;
@@ -180,8 +143,8 @@ export interface OrderItem {
 
 export interface Payment {
     id: string;
-    order?: Order;
-    orderId?: string;
+    order?: Order | null;
+    orderId?: string | null;
     amount: number;
     method: PaymentMethod;
     createdAt: Date;
@@ -190,16 +153,16 @@ export interface Payment {
 
 export interface Shipment {
     id: string;
-    order: Order;
+    order: Partial<Order>;
     orderId: string;
-    driver?: Driver;
-    driverId?: string;
-    vehicle?: Vehicle;
-    vehicleId?: string;
-    route?: Route;
-    routeId?: string;
+    driver?: Driver | null;
+    driverId?: string | null;
+    vehicle?: Vehicle | null;
+    vehicleId?: string | null;
+    route?: Route | null;
+    routeId?: string | null;
     status: ShipmentStatus;
-    tracking?: string;
+    tracking?: string | null;
     createdAt: Date;
     updatedAt: Date;
 }
@@ -207,8 +170,8 @@ export interface Shipment {
 export interface Supplier {
     id: string;
     name: string;
-    phone?: string;
-    email?: string;
+    phone?: string | null;
+    email?: string | null;
     address?: string;
     products: Product[];
     createdAt: Date;
@@ -219,8 +182,8 @@ export interface Vehicle {
     id: string;
     plate: string;
     type: string;
-    capacity?: number;
-    drivers: Driver[];
+    capacity?: number | null;
+    drivers?: Driver[];
     createdAt: Date;
     updatedAt: Date;
 }
@@ -228,13 +191,13 @@ export interface Vehicle {
 export interface Driver {
     id: string;
     name: string;
-    imageUrl?: string;
+    imageUrl?: string | null;
     phone: string;
-    badge: DriverBadge;
-    license?: string;
-    vehicle?: Vehicle;
-    vehicleId?: string;
-    shipments: Shipment[];
+    badge: $Enums.DriverBadge;
+    license?: string | null;
+    vehicle?: Vehicle | null;
+    vehicleId?: string | null;
+    shipments?: Partial<Shipment>[] | null;
     createdAt: Date;
     updatedAt: Date;
 }

@@ -15,7 +15,6 @@ type DriverTableProps = {
 function DriverTable({ drivers, filterBy }: DriverTableProps) {
     const [selectAll, setSelectAll] = useState(false);
     const [selected, setSelected] = useState<string[]>([]);
-    const [data, setData] = useState<Driver[]>(drivers);
 
     const handleSelectAll = () => {
         if (selectAll) {
@@ -43,7 +42,7 @@ function DriverTable({ drivers, filterBy }: DriverTableProps) {
     }, [selected, drivers.length]);
 
     return (
-        <div className="overflow-x-auto">
+        <div className="h-[700px]  overflow-x-auto">
             {selected.length > 0 && (
                 <div className={clsx('flex items-center justify-between mb-2 p-2 border', wrapper)}>
                     <span className="text-sm">{selected.length} selected</span>
@@ -82,15 +81,17 @@ function DriverTable({ drivers, filterBy }: DriverTableProps) {
                                 <td className="py-4 px-6">
                                     <Image
                                         alt="Driver Image"
-                                        src={driver.imageUrl || '/nguyenminhkiet.JPG'}
-                                        width={50}
-                                        height={50}
-                                        className="w-auto h-auto object-cover"
+                                        src={`/${driver.imageUrl}` || '/nguyenminhkiet.JPG'}
+                                        width={100}
+                                        height={150}
+                                        className="w-[100px] h-[150px]  rounded-xl  object-cover"
                                     />
                                 </td>
                                 {filterBy && filterBy.includes('name') && <td className="py-4 px-6">{driver.name}</td>}
-                                {filterBy && filterBy.includes('name') && <td className="py-4 px-6">{driver.phone}</td>}
-                                {filterBy && filterBy.includes('name') && (
+                                {filterBy && filterBy.includes('phone') && (
+                                    <td className="py-4 px-6">{driver.phone}</td>
+                                )}
+                                {filterBy && filterBy.includes('badge') && (
                                     <td className="py-4 px-6">
                                         <span
                                             className={`inline-block px-2 py-1 rounded-full text-xs font-semibold ${

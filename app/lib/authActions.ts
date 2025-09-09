@@ -3,8 +3,7 @@
 import { SignupFormSchema, FormState, SigninFormSchema } from './definitions/definitions';
 import { createSession, deleteSession } from '@/app/lib/session';
 import { zodErrorsToTree } from '@/app/lib/zodErrorsToTree';
-import { CreateUser, Authorize } from '@/app/lib/actions';
-import { redirect } from 'next/navigation';
+import { createUser, authorize } from '@/app/lib/actions';
 
 export async function signUp(state: FormState, formData: FormData): Promise<FormState> {
     const userName = formData.get('name') as string;
@@ -27,7 +26,7 @@ export async function signUp(state: FormState, formData: FormData): Promise<Form
     }
     try {
         // Gọi server action trực tiếp
-        const user = await CreateUser(userName, userEmail, userPassword);
+        const user = await createUser(userName, userEmail, userPassword);
         await createSession(user.id);
         console.log('User created: ', user);
         return { success: true, message: 'Tạo tài khoản thành công' };
@@ -58,7 +57,7 @@ export async function signIn(state: FormState, formData: FormData): Promise<Form
     // }
     try {
         // Gọi server action trực tiếp
-        const user = await Authorize(userEmail, userPassword);
+        const user = await authorize(userEmail, userPassword);
         await createSession(user.id);
         return { success: true, message: 'Đăng nhập thành công' };
     } catch (err: any) {

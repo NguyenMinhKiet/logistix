@@ -16,10 +16,14 @@ CREATE TYPE "public"."PaymentMethod" AS ENUM ('CASH', 'BANK_TRANSFER', 'CREDIT_C
 -- CreateEnum
 CREATE TYPE "public"."ShipmentStatus" AS ENUM ('PENDING', 'IN_TRANSIT', 'DELIVERED', 'RETURNED');
 
+-- CreateEnum
+CREATE TYPE "public"."DriverBadge" AS ENUM ('BUSY', 'FREE', 'OFFLINE');
+
 -- CreateTable
 CREATE TABLE "public"."User" (
     "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
+    "imageUrl" TEXT,
     "email" TEXT NOT NULL,
     "password" TEXT NOT NULL,
     "role" "public"."Role" NOT NULL DEFAULT 'USER',
@@ -34,6 +38,7 @@ CREATE TABLE "public"."Warehouse" (
     "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "location" TEXT NOT NULL,
+    "imageUrl" TEXT,
     "capacity" INTEGER,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
@@ -46,6 +51,7 @@ CREATE TABLE "public"."Store" (
     "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "location" TEXT NOT NULL,
+    "imageUrl" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -86,6 +92,7 @@ CREATE TABLE "public"."Inventory" (
 CREATE TABLE "public"."Transaction" (
     "id" TEXT NOT NULL,
     "type" "public"."TransactionType" NOT NULL,
+    "imageUrl" TEXT,
     "productId" TEXT NOT NULL,
     "quantity" INTEGER NOT NULL,
     "warehouseId" TEXT,
@@ -115,6 +122,7 @@ CREATE TABLE "public"."ProductInstance" (
 -- CreateTable
 CREATE TABLE "public"."Customer" (
     "id" TEXT NOT NULL,
+    "imageUrl" TEXT,
     "name" TEXT NOT NULL,
     "phone" TEXT NOT NULL,
     "email" TEXT,
@@ -130,6 +138,7 @@ CREATE TABLE "public"."Order" (
     "id" TEXT NOT NULL,
     "customerId" TEXT NOT NULL,
     "userId" TEXT NOT NULL,
+    "imageUrl" TEXT,
     "status" "public"."OrderStatus" NOT NULL DEFAULT 'PENDING',
     "total" DOUBLE PRECISION NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -192,6 +201,7 @@ CREATE TABLE "public"."Supplier" (
 CREATE TABLE "public"."Vehicle" (
     "id" TEXT NOT NULL,
     "plate" TEXT NOT NULL,
+    "imageUrl" TEXT,
     "type" TEXT NOT NULL,
     "capacity" INTEGER,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -204,6 +214,8 @@ CREATE TABLE "public"."Vehicle" (
 CREATE TABLE "public"."Driver" (
     "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
+    "imageUrl" TEXT,
+    "badge" "public"."DriverBadge" NOT NULL DEFAULT 'FREE',
     "phone" TEXT NOT NULL,
     "license" TEXT,
     "vehicleId" TEXT,
@@ -223,6 +235,16 @@ CREATE TABLE "public"."Route" (
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "Route_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "public"."Session" (
+    "id" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "expiresAt" TIMESTAMP(3) NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "Session_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -267,6 +289,9 @@ CREATE UNIQUE INDEX "Vehicle_plate_key" ON "public"."Vehicle"("plate");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Driver_phone_key" ON "public"."Driver"("phone");
+
+-- CreateIndex
+CREATE INDEX "Session_userId_idx" ON "public"."Session"("userId");
 
 -- CreateIndex
 CREATE INDEX "_UserWarehouses_B_index" ON "public"."_UserWarehouses"("B");
@@ -336,6 +361,9 @@ ALTER TABLE "public"."Shipment" ADD CONSTRAINT "Shipment_routeId_fkey" FOREIGN K
 
 -- AddForeignKey
 ALTER TABLE "public"."Driver" ADD CONSTRAINT "Driver_vehicleId_fkey" FOREIGN KEY ("vehicleId") REFERENCES "public"."Vehicle"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "public"."Session" ADD CONSTRAINT "Session_userId_fkey" FOREIGN KEY ("userId") REFERENCES "public"."User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "public"."_UserWarehouses" ADD CONSTRAINT "_UserWarehouses_A_fkey" FOREIGN KEY ("A") REFERENCES "public"."User"("id") ON DELETE CASCADE ON UPDATE CASCADE;

@@ -5,110 +5,47 @@ import ButtonInput from '@/app/ui/buttons/ButtonInput';
 import { Bars3Icon, CheckIcon, MagnifyingGlassIcon, PlusIcon } from '@heroicons/react/24/outline';
 import clsx from 'clsx';
 import { FilterIcon, Grid2X2, UsersIcon } from 'lucide-react';
-import { ChangeEvent, useEffect, useState } from 'react';
+import { ChangeEvent, useState } from 'react';
 import UserCard from '@/app/ui/UserCard';
 import UserTable from '@/app/ui/DriverTable';
-import { Driver, DriverBadge } from '@/app/types';
+import { Driver } from '@/app/types';
 import { wrapper } from '@/app/styles/classes';
+import DriverModal from '@/app/ui/modals/DriverModal';
+import { DriverBadge } from '@prisma/client';
+import { useDrivers } from '@/app/context/DriverContext';
 
 function Page() {
     const [searchBtn, setSearchBtn] = useState('');
     const [displayType, setDisplayType] = useState<'grid' | 'list'>('list');
 
-    const drivers: Driver[] = [
-        {
-            id: 'd1',
-            name: 'Nguyễn Minh Kiệt',
-            imageUrl: '/nguyenminhkiet.JPG',
-            phone: '+84 932667135',
-            license: 'B2-123456',
-            badge: DriverBadge.FREE,
-            vehicle: undefined,
-            vehicleId: 'v1',
-            shipments: [],
-            createdAt: new Date('2024-09-01T10:00:00Z'),
-            updatedAt: new Date('2024-09-10T15:00:00Z'),
-        },
-        {
-            id: 'd2',
-            name: 'Trần Văn A',
-            imageUrl: '/nguyenminhkiet.JPG',
-            phone: '+84 912345678',
-            license: 'C-654321',
-            badge: DriverBadge.BUSY,
-            vehicle: undefined,
-            vehicleId: 'v2',
-            shipments: [],
-            createdAt: new Date('2024-08-15T08:30:00Z'),
-            updatedAt: new Date('2024-09-05T12:00:00Z'),
-        },
-        {
-            id: 'd3',
-            name: 'Lê Thị B',
-            imageUrl: '/nguyenminhkiet.JPG',
-            phone: '+84 987654321',
-            license: 'B2-789456',
-            badge: DriverBadge.BUSY,
-            vehicle: undefined,
-            vehicleId: 'v3',
-            shipments: [],
-            createdAt: new Date('2024-07-20T09:15:00Z'),
-            updatedAt: new Date('2024-08-28T18:45:00Z'),
-        },
-        {
-            id: 'd4',
-            name: 'Phạm Văn C',
-            imageUrl: '/nguyenminhkiet.JPG',
-            phone: '+84 934567890',
-            license: 'C-112233',
-            badge: DriverBadge.FREE,
-            vehicle: undefined,
-            vehicleId: 'v4',
-            shipments: [],
-            createdAt: new Date('2024-06-05T07:00:00Z'),
-            updatedAt: new Date('2024-07-01T11:30:00Z'),
-        },
-        {
-            id: 'd5',
-            name: 'Hoàng Thị D',
-            imageUrl: '/nguyenminhkiet.JPG',
-            phone: '+84 911223344',
-            license: 'B2-998877',
-            badge: DriverBadge.BUSY,
-            vehicle: undefined,
-            vehicleId: 'v5',
-            shipments: [],
-            createdAt: new Date('2024-05-12T14:00:00Z'),
-            updatedAt: new Date('2024-06-20T09:20:00Z'),
-        },
-    ];
-    const [data, setData] = useState(drivers as unknown as Driver[]);
+    const { drivers } = useDrivers(); // luôn lấy từ context
+    const [showAddDriverModal, setShowAddDriverModal] = useState(false);
     const [showSortFilter, setShowSortFilter] = useState(false);
+
     const [sortBy, setSortBy] = useState<'name' | 'badge' | ''>('name');
-    const [filterBy, setFilterBy] = useState<('name' | 'phone' | 'badge' | '')[]>(['name', 'phone', 'badge']);
+    const [filterBy, setFilterBy] = useState<('name' | 'phone' | 'badge')[]>(['name', 'phone', 'badge']);
+
+    // Filter + Search
+    const filteredDrivers = drivers.filter((driver) => {
+        const searchLower = searchBtn.toLowerCase();
+        return driver.name.toLowerCase().includes(searchLower) || driver.phone.toLowerCase().includes(searchLower);
+    });
+
+    // Sort
+    const sortedDrivers = [...filteredDrivers].sort((a, b) => {
+        if (sortBy === 'name') return a.name.localeCompare(b.name);
+        if (sortBy === 'badge') return a.badge.localeCompare(b.badge);
+        return 0;
+    });
 
     const handleSearch = (e: ChangeEvent<HTMLInputElement>) => {
-        const value = e.target.value.toLowerCase();
-        setSearchBtn(value);
-        const filteredDrivers = drivers.filter(
-            (driver) => driver.name.toLowerCase().includes(value) || driver.phone.toLowerCase().includes(value),
-        );
-        setData(filteredDrivers as unknown as Driver[]);
+        setSearchBtn(e.target.value);
     };
 
-    useEffect(() => {
-        if (sortBy) {
-            if (sortBy === 'name') {
-                setData([...data].sort((a, b) => a.name.localeCompare(b.name)));
-            } else {
-                setData([...data].sort((a, b) => a.badge.localeCompare(b.badge)));
-            }
-        }
-    }, [sortBy]);
     return (
         <>
             {/* Header */}
-            <div className="h-40 mb-3 grid grid-cols-2 bg-gradient-to-r from-blue-400 to-indigo-500  text-white">
+            <div className="h-40 mb-3 grid grid-cols-2 bg-gradient-to-r from-blue-400 to-indigo-500 text-white">
                 {/* Breadcrumb */}
                 <Breadcrumb
                     preList={[
@@ -120,34 +57,34 @@ function Page() {
 
                 <div className="flex flex-col p-5 justify-end items-end">
                     <div className="flex gap-3">
-                        {/* Card */}
+                        {/* Total Drivers */}
                         <div className="flex flex-col shadow-md rounded-xl p-2 px-3 w-52 bg-white/50 text-black">
                             <h1 className="text-gray-700">Total Drivers</h1>
                             <div className="flex justify-between items-center">
-                                <span className="font-semibold text-xl">{drivers.length ?? 0}</span>
+                                <span className="font-semibold text-xl">{drivers.length}</span>
                                 <div className="flex items-center justify-center rounded-full border border-white p-2 bg-white">
                                     <UsersIcon className="w-5 h-5" />
                                 </div>
                             </div>
                         </div>
-                        {/* Card */}
+                        {/* Busy */}
                         <div className="flex flex-col shadow-md rounded-xl p-2 px-3 w-52 bg-white/50 text-black">
                             <h1 className="text-gray-700">Busy</h1>
                             <div className="flex justify-between items-center">
                                 <span className="font-semibold text-xl">
-                                    {drivers.filter((driver) => driver.badge === DriverBadge.BUSY).length ?? 0}
+                                    {drivers.filter((driver) => driver.badge === DriverBadge.BUSY).length}
                                 </span>
                                 <div className="flex items-center justify-center rounded-full border border-white p-2 bg-white">
                                     <UsersIcon className="w-5 h-5 text-amber-500" />
                                 </div>
                             </div>
                         </div>
-                        {/* Card */}
+                        {/* Free */}
                         <div className="flex flex-col shadow-md rounded-xl p-2 px-3 w-52 bg-white/50 text-black">
                             <h1 className="text-gray-700">Free</h1>
                             <div className="flex justify-between items-center">
                                 <span className="font-semibold text-xl">
-                                    {drivers.filter((driver) => driver.badge === DriverBadge.FREE).length ?? 0}
+                                    {drivers.filter((driver) => driver.badge === DriverBadge.FREE).length}
                                 </span>
                                 <div className="flex items-center justify-center rounded-full border border-white p-2 bg-white">
                                     <UsersIcon className="w-5 h-5 text-green-500" />
@@ -159,7 +96,7 @@ function Page() {
             </div>
 
             {/* Main */}
-            <main className="flex flex-col px-3">
+            <main className="flex flex-col px-3 relative">
                 {/* NavBar */}
                 <div className="flex justify-between items-center">
                     <div className="flex justify-between items-center gap-2">
@@ -167,8 +104,8 @@ function Page() {
                             <button
                                 onClick={() => setDisplayType('grid')}
                                 className={clsx(
-                                    'cursor-pointer my-1  hover:bg-white hover:border hover:border-gray-400 text-gray-600 font-semibold rounded-xl p-2',
-                                    displayType === 'grid' ? 'border  border-gray-400  bg-white' : '',
+                                    'cursor-pointer my-1 hover:bg-white hover:border hover:border-gray-400 text-gray-600 font-semibold rounded-xl p-2',
+                                    displayType === 'grid' ? 'border border-gray-400 bg-white' : '',
                                 )}
                             >
                                 <Grid2X2 className="w-5 h-5" />
@@ -176,16 +113,17 @@ function Page() {
                             <button
                                 onClick={() => setDisplayType('list')}
                                 className={clsx(
-                                    'cursor-pointer my-1  hover:bg-white hover:border hover:border-gray-400 text-gray-600 font-semibold rounded-xl p-2',
-                                    displayType === 'list' ? 'border  border-gray-400  bg-white' : '',
+                                    'cursor-pointer my-1 hover:bg-white hover:border hover:border-gray-400 text-gray-600 font-semibold rounded-xl p-2',
+                                    displayType === 'list' ? 'border border-gray-400 bg-white' : '',
                                 )}
                             >
                                 <Bars3Icon className="w-5 h-5" />
                             </button>
                         </div>
                     </div>
+
                     <div className="flex gap-3">
-                        {/* SearchButton */}
+                        {/* Search */}
                         <ButtonInput
                             Icon={MagnifyingGlassIcon}
                             type="text"
@@ -209,59 +147,41 @@ function Page() {
                                     )}
                                 >
                                     <h1 className="mb-2 font-semibold">Sort By</h1>
-                                    <div className=" flex gap-2 items-center">
+                                    <div className="flex gap-2 items-center">
                                         <ButtonAction
                                             Icon={CheckIcon}
                                             label="name"
-                                            variant={sortBy.includes('name') ? 'outlineSuccess' : 'secondary'}
+                                            variant={sortBy === 'name' ? 'outlineSuccess' : 'secondary'}
                                             onClick={() => setSortBy('name')}
                                         />
                                         <ButtonAction
                                             Icon={CheckIcon}
                                             label="badge"
-                                            variant={sortBy.includes('badge') ? 'outlineSuccess' : 'secondary'}
+                                            variant={sortBy === 'badge' ? 'outlineSuccess' : 'secondary'}
                                             onClick={() => setSortBy('badge')}
                                         />
                                         <ButtonAction label="clear" variant="textDark" onClick={() => setSortBy('')} />
                                     </div>
+
                                     <h1 className="mb-2 font-semibold">Filter By</h1>
-                                    <div className=" flex gap-2 items-center">
-                                        <ButtonAction
-                                            Icon={CheckIcon}
-                                            label="Name"
-                                            variant={filterBy.includes('name') ? 'outlineSuccess' : 'secondary'}
-                                            onClick={() =>
-                                                setFilterBy((prev) =>
-                                                    prev.includes('name')
-                                                        ? prev.filter((f) => f !== 'name')
-                                                        : [...prev, 'name'],
-                                                )
-                                            }
-                                        />
-                                        <ButtonAction
-                                            Icon={CheckIcon}
-                                            label="Phone"
-                                            variant={filterBy.includes('phone') ? 'outlineSuccess' : 'secondary'}
-                                            onClick={() =>
-                                                setFilterBy((prev) =>
-                                                    prev.includes('phone')
-                                                        ? prev.filter((f) => f !== 'phone')
-                                                        : [...prev, 'phone'],
-                                                )
-                                            }
-                                        />
-                                        <ButtonAction
-                                            Icon={CheckIcon}
-                                            label="Badge"
-                                            variant={filterBy.includes('badge') ? 'outlineSuccess' : 'secondary'}
-                                            onClick={() =>
-                                                setFilterBy((prev) =>
-                                                    prev.includes('badge')
-                                                        ? prev.filter((f) => f !== 'badge')
-                                                        : [...prev, 'badge'],
-                                                )
-                                            }
-                                        />
+                                    <div className="flex gap-2 items-center">
+                                        {['name', 'phone', 'badge'].map((field) => (
+                                            <ButtonAction
+                                                key={field}
+                                                Icon={CheckIcon}
+                                                label={field.charAt(0).toUpperCase() + field.slice(1)}
+                                                variant={
+                                                    filterBy.includes(field as any) ? 'outlineSuccess' : 'secondary'
+                                                }
+                                                onClick={() =>
+                                                    setFilterBy((prev) =>
+                                                        prev.includes(field as any)
+                                                            ? prev.filter((f) => f !== field)
+                                                            : [...prev, field as any],
+                                                    )
+                                                }
+                                            />
+                                        ))}
                                         <ButtonAction
                                             label="clear"
                                             variant="textDark"
@@ -271,23 +191,28 @@ function Page() {
                                 </div>
                             )}
                         </div>
-                        {/* Button Add */}
-                        <ButtonAction Icon={PlusIcon} label="Add New" variant="mainColor" />
+
+                        {/* Add New */}
+                        <ButtonAction
+                            Icon={PlusIcon}
+                            label="Add New"
+                            variant="mainColor"
+                            onClick={() => setShowAddDriverModal(true)}
+                        />
                     </div>
                 </div>
+
                 {/* Content */}
                 <div
                     className={clsx(
-                        ` gap-3 mt-3`,
+                        `gap-3 mt-3`,
                         displayType === 'grid'
                             ? 'grid grid-cols-[repeat(auto-fill,minmax(300px,1fr))]'
                             : 'flex flex-col',
                     )}
                 >
-                    {/* Card Driver */}
-
                     {displayType === 'grid' ? (
-                        data.map((driver) => (
+                        sortedDrivers.map((driver) => (
                             <UserCard
                                 key={driver.id}
                                 image={driver.imageUrl ?? '/nguyenminhkiet.JPG'}
@@ -297,9 +222,21 @@ function Page() {
                             />
                         ))
                     ) : (
-                        <UserTable drivers={data} filterBy={filterBy} />
+                        <UserTable drivers={sortedDrivers} filterBy={filterBy} />
                     )}
                 </div>
+
+                {/* Add Driver Modal */}
+                {showAddDriverModal && (
+                    <div
+                        className={clsx(
+                            'absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-1/3 p-5 bg-white border',
+                            wrapper,
+                        )}
+                    >
+                        <DriverModal isModalOpen={showAddDriverModal} onClose={() => setShowAddDriverModal(false)} />
+                    </div>
+                )}
             </main>
         </>
     );
