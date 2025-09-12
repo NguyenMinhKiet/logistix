@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { signIn } from '@/app/lib/authActions';
 import clsx from 'clsx';
 import { useRouter } from 'next/navigation';
+import { useNotificationStore } from '../store/notificationStore';
 
 interface LoginFormData {
     email: string;
@@ -13,21 +14,27 @@ interface LoginFormData {
 }
 
 export default function LoginForm() {
-    const [state, formAction, isPending] = useActionState(signIn, undefined);
+    const addNotification = useNotificationStore((s) => s.addNotification);
     const router = useRouter();
+    const [state, formAction, isPending] = useActionState(signIn, undefined);
     const [showPassword, setShowPassword] = useState(false);
     const togglePasswordVisibility = (): void => setShowPassword((prev) => !prev);
-
-    useEffect(() => {
-        if (state?.message && state?.success) {
-            router.push('/dashboard?status=success&message=' + encodeURIComponent('Đăng nhập thành công')); // client redirect
-        }
-    }, [state, router]);
 
     const [formData, setFormData] = useState<LoginFormData>({
         email: '',
         password: '',
     });
+
+    useEffect(() => {
+        if (!state?.message) return;
+
+        if (state.success) {
+            addNotification(state.message, 'success');
+            router.push('/dashboard');
+        } else {
+            addNotification(state.message, 'error');
+        }
+    }, [state, addNotification]);
 
     const handleInputChange = (e: ChangeEvent<HTMLInputElement>): void => {
         const { name, value } = e.target;
@@ -114,9 +121,6 @@ export default function LoginForm() {
                         {isPending ? 'Đang xử lý ...' : 'Đăng nhập'}
                     </span>
                 </button>
-                {state?.message && (
-                    <p className={clsx(!state?.success ? 'text-red-500 ' : 'text-green-600')}>{state?.message}</p>
-                )}
             </form>
 
             {/* Demo Credentials */}
@@ -124,10 +128,10 @@ export default function LoginForm() {
                 <p className="text-xs sm:text-sm text-gray-600 font-medium mb-2">🔧 Demo Credentials:</p>
                 <div className="space-y-1 text-xs sm:text-sm">
                     <p>
-                        <span className="font-medium">Email:</span> admin@logistic.com
+                        <span className="font-medium">Email:</span> admin@gmail.com
                     </p>
                     <p>
-                        <span className="font-medium">Password:</span> admin123
+                        <span className="font-medium">Password:</span> Admin@123
                     </p>
                 </div>
             </div>

@@ -1,10 +1,12 @@
 'use client';
 
-import { ChangeEvent, useActionState, useState } from 'react';
+import { ChangeEvent, useActionState, useEffect, useState } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
 import Link from 'next/link';
 import { signUp } from '@/app/lib/authActions';
 import clsx from 'clsx';
+import { useNotificationStore } from '../store/notificationStore';
+import { useRouter } from 'next/navigation';
 
 interface RegisterFormData {
     name: string;
@@ -14,6 +16,12 @@ interface RegisterFormData {
 }
 
 export default function RegisterForm() {
+    // Notification Store
+    const addNotification = useNotificationStore((s) => s.addNotification);
+
+    // Router
+    const router = useRouter();
+
     const [state, formAction, isPending] = useActionState(signUp, undefined);
 
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -36,6 +44,18 @@ export default function RegisterForm() {
             [name]: value,
         }));
     };
+
+    // Notification
+    useEffect(() => {
+        if (!state?.message) return;
+
+        if (state.success) {
+            addNotification(state.message, 'success');
+            router.push('/dashboard');
+        } else {
+            addNotification(state.message, 'error');
+        }
+    }, [state, addNotification]);
 
     return (
         <div className="p-4 sm:p-6 lg:p-8">
@@ -123,7 +143,7 @@ export default function RegisterForm() {
                     </div>
                     {state?.errors?.password && (
                         <div className="mt-1 text-xs sm:text-sm text-red-600">
-                            <p>Password must:</p>
+                            <p>Mật khẩu phải thỏa các điều kiện sau:</p>
                             <ul>
                                 {state.errors.password.map((error) => (
                                     <li key={error}>- {error}</li>
@@ -179,9 +199,6 @@ export default function RegisterForm() {
                 >
                     <span className="text-sm sm:text-base lg:text-lg">{isPending ? 'Đang xử lý ...' : 'Đăng ký'}</span>
                 </button>
-                {state?.message && (
-                    <p className={clsx(!state?.success ? 'text-red-500 ' : 'text-green-600')}>{state?.message}</p>
-                )}
             </form>
 
             {/* Demo Credentials */}

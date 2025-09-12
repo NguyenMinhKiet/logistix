@@ -6,14 +6,14 @@ import clsx from 'clsx';
 import { wrapper } from '../styles/classes';
 import { DriverBadge } from '@prisma/client';
 
-type UserCardProps = {
+type DriverCardProps = {
     image: string;
     name: string;
     badge: DriverBadge;
     phone: string;
 };
 
-function UserCard({ image, name, badge = DriverBadge.FREE, phone }: UserCardProps) {
+function DriverCard({ image, name, badge = DriverBadge.FREE, phone }: DriverCardProps) {
     return (
         <div className={clsx(`${wrapper} flex flex-col p-3 border border-gray-200`)}>
             <div className="relative w-[70px] h-[70px] mx-auto">
@@ -63,4 +63,4 @@ function UserCard({ image, name, badge = DriverBadge.FREE, phone }: UserCardProp
     );
 }
 
-export default UserCard;
+export default DriverCard;

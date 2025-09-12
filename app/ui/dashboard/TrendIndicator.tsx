@@ -1,6 +1,6 @@
 import clsx from 'clsx';
 import { ArrowDownIcon, ArrowUpIcon } from 'lucide-react';
-import { formatNumber } from '../../lib/format';
+import { formatNumber } from '../../helpers/format';
 
 interface trendIndicatorProps {
     isPositive: boolean;

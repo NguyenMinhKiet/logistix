@@ -1,13 +1,12 @@
 'use client';
 import { createDriver } from '@/app/lib/actions/driverActions';
-import { Shipment } from '@/app/types';
-import { DriverBadge } from '@prisma/client';
-import clsx from 'clsx';
+import { DriverBadge, Shipment } from '@prisma/client';
 import Image from 'next/image';
 import { ChangeEvent, useActionState, useEffect, useState } from 'react';
-import ButtonAction from '../buttons/ButtonAction';
-import { XMarkIcon } from '@heroicons/react/24/outline';
 import { useDrivers } from '@/app/context/DriverContext';
+import Modal from './Modal';
+import toast from 'react-hot-toast';
+import { useNotificationStore } from '@/app/store/notificationStore';
 
 interface DriverFormData {
     name: string;
@@ -19,14 +18,19 @@ interface DriverFormData {
     shipments: Shipment[];
 }
 
-interface DriverModalProps {
+interface AddDriverModalProps {
     isModalOpen: boolean;
     onClose: () => void; // callback đóng modal
 }
 
-function DriverModal({ isModalOpen = false, onClose }: DriverModalProps) {
+function AddDriverModal({ isModalOpen = false, onClose }: AddDriverModalProps) {
+    if (!isModalOpen) return null;
+
+    // Notification Store
+    const addNotification = useNotificationStore((s) => s.addNotification);
+
     const [state, formAction, isPending] = useActionState(createDriver, undefined);
-    const { addDriver } = useDrivers();
+    const { addDriverContext } = useDrivers();
     const [previewImage, setPreviewImage] = useState('/nguyenminhkiet.JPG');
     const [imageFile, setImageFile] = useState<string>('');
 
@@ -39,6 +43,25 @@ function DriverModal({ isModalOpen = false, onClose }: DriverModalProps) {
         vehicleId: undefined,
         shipments: [],
     });
+
+    useEffect(() => {
+        if (!state?.message) return;
+        if (state.success) {
+            addNotification(state.message, 'success');
+        } else {
+            addNotification(state.message, 'error');
+        }
+    }, [state, addNotification]);
+
+    useEffect(() => {
+        if (state?.message) {
+            if (state?.success) {
+                toast.success(state.message, { duration: 2000 });
+            } else {
+                toast.error(state.message, { duration: 3000 });
+            }
+        }
+    }, [state?.message, state?.success]);
 
     useEffect(() => {
         if (!isModalOpen) {
@@ -59,7 +82,7 @@ function DriverModal({ isModalOpen = false, onClose }: DriverModalProps) {
         // nếu submit thành công thì gọi onClose
         if (state?.success) {
             if (state.data) {
-                addDriver(state.data);
+                addDriverContext(state.data);
             }
             onClose();
         }
@@ -74,12 +97,10 @@ function DriverModal({ isModalOpen = false, onClose }: DriverModalProps) {
     };
 
     return (
-        <div className="flex flex-col">
-            <div className="flex justify-between items-center">
-                <h1 className="text-2xl font-semibold">Add New Driver</h1>
-                <ButtonAction Icon={XMarkIcon} onClick={() => onClose()} variant="danger" />
-            </div>
-            {isModalOpen && (
+        <Modal
+            isOpen={isModalOpen}
+            title="Add New Driver"
+            children={
                 <form action={formAction} className="space-y-4 sm:space-y-6">
                     {/* Image Preview */}
                     <div className="flex items-center justify-center py-2">
@@ -239,13 +260,11 @@ function DriverModal({ isModalOpen = false, onClose }: DriverModalProps) {
                     >
                         <span className="text-sm sm:text-base lg:text-lg">{isPending ? 'Đang xử lý ...' : 'Thêm'}</span>
                     </button>
-                    {state?.message && (
-                        <p className={clsx(!state?.success ? 'text-red-500 ' : 'text-green-600')}>{state?.message}</p>
-                    )}
                 </form>
-            )}
-        </div>
+            }
+            onCancel={() => onClose()}
+        />
     );
 }
 
-export default DriverModal;
+export default AddDriverModal;

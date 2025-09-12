@@ -6,11 +6,10 @@ import { Bars3Icon, CheckIcon, MagnifyingGlassIcon, PlusIcon } from '@heroicons/
 import clsx from 'clsx';
 import { FilterIcon, Grid2X2, UsersIcon } from 'lucide-react';
 import { ChangeEvent, useState } from 'react';
-import UserCard from '@/app/ui/UserCard';
+import UserCard from '@/app/ui/DriverCard';
 import UserTable from '@/app/ui/DriverTable';
-import { Driver } from '@/app/types';
 import { wrapper } from '@/app/styles/classes';
-import DriverModal from '@/app/ui/modals/DriverModal';
+import DriverModal from '@/app/ui/modals/AddDriverModal';
 import { DriverBadge } from '@prisma/client';
 import { useDrivers } from '@/app/context/DriverContext';
 
@@ -228,14 +227,7 @@ function Page() {
 
                 {/* Add Driver Modal */}
                 {showAddDriverModal && (
-                    <div
-                        className={clsx(
-                            'absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-1/3 p-5 bg-white border',
-                            wrapper,
-                        )}
-                    >
-                        <DriverModal isModalOpen={showAddDriverModal} onClose={() => setShowAddDriverModal(false)} />
-                    </div>
+                    <DriverModal isModalOpen={showAddDriverModal} onClose={() => setShowAddDriverModal(false)} />
                 )}
             </main>
         </>

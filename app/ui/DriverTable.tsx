@@ -6,7 +6,10 @@ import ButtonAction from './buttons/ButtonAction';
 import { PencilIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import clsx from 'clsx';
 import { wrapper } from '../styles/classes';
-import { Driver } from '@/app/types';
+import ConfirmDialog from './modals/ConfirmDialog';
+import { useDrivers } from '../context/DriverContext';
+import EditDriverModal from './modals/EditDriverModal';
+import { Driver } from '@prisma/client';
 
 type DriverTableProps = {
     drivers: Driver[];
@@ -14,23 +17,25 @@ type DriverTableProps = {
 };
 function DriverTable({ drivers, filterBy }: DriverTableProps) {
     const [selectAll, setSelectAll] = useState(false);
-    const [selected, setSelected] = useState<string[]>([]);
+    const [selected, setSelected] = useState<{ id: string; name: string }[]>([]);
+    const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+    const [editingDriver, setEditingDriver] = useState<Driver>();
+    const { deleteDriverContext } = useDrivers();
 
     const handleSelectAll = () => {
         if (selectAll) {
             setSelected([]);
         } else {
-            setSelected(drivers.map((user) => user.id));
+            setSelected(drivers.map((user) => ({ id: user.id, name: user.name })));
         }
         setSelectAll(!selectAll);
     };
 
-    const handleSelectOne = (index: string) => {
-        if (selected.includes(index)) {
-            setSelected(selected.filter((i) => i !== index));
-        } else {
-            setSelected([...selected, index]);
-        }
+    const handleSelectOne = (user: { id: string; name: string }) => {
+        setSelected((prev) => {
+            const exists = prev.find((i) => i.id === user.id);
+            return exists ? prev.filter((i) => i.id !== user.id) : [...prev, user];
+        });
     };
 
     useEffect(() => {
@@ -41,13 +46,37 @@ function DriverTable({ drivers, filterBy }: DriverTableProps) {
         }
     }, [selected, drivers.length]);
 
+    const handleDelete = () => {
+        if (selected) {
+            selected.map(async (selected) => {
+                setSelected([]);
+                setShowConfirmDialog(false);
+                await deleteDriverContext(selected.id);
+            });
+        }
+    };
+
     return (
         <div className="h-[700px]  overflow-x-auto">
             {selected.length > 0 && (
                 <div className={clsx('flex items-center justify-between mb-2 p-2 border', wrapper)}>
                     <span className="text-sm">{selected.length} selected</span>
                     <div className="flex gap-2">
-                        <ButtonAction label="Delete" variant="danger" />
+                        <ButtonAction
+                            label="Delete"
+                            variant="danger"
+                            onClick={() => setShowConfirmDialog(!showConfirmDialog)}
+                        />
+                        <ConfirmDialog
+                            isOpen={showConfirmDialog}
+                            title="Xoá tài xế"
+                            message={'Bạn có chắc chắn muốn xoá các tài xế này?'}
+                            data={selected}
+                            confirmText="Xoá"
+                            cancelText="Huỷ"
+                            onConfirm={handleDelete}
+                            onCancel={() => setShowConfirmDialog(false)}
+                        />
                     </div>
                 </div>
             )}
@@ -74,8 +103,8 @@ function DriverTable({ drivers, filterBy }: DriverTableProps) {
                                     <input
                                         type="checkbox"
                                         className="w-5 h-5"
-                                        checked={!!selected.includes(driver.id)}
-                                        onChange={() => handleSelectOne(driver.id)}
+                                        checked={selected.some((s) => s.id === driver.id)}
+                                        onChange={() => handleSelectOne({ id: driver.id, name: driver.name })}
                                     />
                                 </td>
                                 <td className="py-4 px-6">
@@ -108,7 +137,11 @@ function DriverTable({ drivers, filterBy }: DriverTableProps) {
                                 )}
 
                                 <td className="py-4 px-6">
-                                    <ButtonAction Icon={PencilIcon} variant="warning" />
+                                    <ButtonAction
+                                        Icon={PencilIcon}
+                                        variant="warning"
+                                        onClick={() => setEditingDriver(driver)}
+                                    />
                                 </td>
                             </tr>
                         ))
@@ -121,6 +154,10 @@ function DriverTable({ drivers, filterBy }: DriverTableProps) {
                     )}
                 </tbody>
             </table>
+
+            {editingDriver && (
+                <EditDriverModal data={editingDriver} isModalOpen={true} onClose={() => setEditingDriver(undefined)} />
+            )}
         </div>
     );
 }

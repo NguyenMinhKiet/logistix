@@ -2,8 +2,7 @@
 import { db } from '@/app/lib/db';
 import { DriverFormSchema } from '../formSchema';
 import { zodErrorsToTree } from '../zodErrorsToTree';
-import { DriverBadge } from '@prisma/client';
-import { Driver } from '@/app/types';
+import { Driver, DriverBadge } from '@prisma/client';
 
 export type FormState =
     | {
@@ -85,34 +84,49 @@ export async function Update(
     });
 }
 
-export async function Delete(id: string) {
-    // Kiểm tra driver tồn tại
-    const driver = await db.driver.findUnique({
-        where: { id },
-        include: { vehicle: true, shipments: true },
-    });
+export async function deleteDriver(id: string) {
+    try {
+        // Kiểm tra driver tồn tại
+        const driver = await db.driver.findUnique({
+            where: { id },
+            include: { vehicle: true, shipments: true },
+        });
 
-    if (!driver) {
-        throw {
-            field: 'id',
-            message: `Driver với id '${id}' không tồn tại !`,
-            status: 404,
+        if (!driver) {
+            return {
+                success: false,
+                message: `Driver với id '${id}' không tồn tại!`,
+                status: 404,
+            };
+        }
+
+        // Ngắt quan hệ trước khi xoá
+        await db.driver.update({
+            where: { id },
+            data: {
+                vehicleId: null, // xoá liên kết vehicle
+                shipments: { set: [] }, // xoá liên kết shipment
+            },
+        });
+
+        // Xoá driver
+        await db.driver.delete({
+            where: { id },
+        });
+
+        return {
+            success: true,
+            message: `Đã xoá driver '${driver.name}'`,
+            status: 200,
+        };
+    } catch (error) {
+        console.error('Lỗi xoá driver:', error);
+        return {
+            success: false,
+            message: 'Lỗi hệ thống khi xoá driver',
+            status: 500,
         };
     }
-
-    // Cập nhật trước: ngắt quan hệ vehicle + shipments
-    await db.driver.update({
-        where: { id },
-        data: {
-            vehicle: { disconnect: true },
-            shipments: { set: [] },
-        },
-    });
-
-    // Xóa driver
-    return await db.driver.delete({
-        where: { id },
-    });
 }
 
 // CAll Server Action
@@ -123,8 +137,6 @@ export async function createDriver(state: FormState, formData: FormData): Promis
     const previewImage = formData.get('previewImage') as string;
     const license = formData.get('license') as string;
     const vehicleId = formData.get('vehicleId') as string;
-    console.log('image: ');
-    console.log('preImage: ', previewImage);
     const validatedFields = DriverFormSchema.safeParse({
         name,
         phone,
@@ -148,8 +160,53 @@ export async function createDriver(state: FormState, formData: FormData): Promis
             vehicleId || undefined,
         );
         return { success: true, message: 'Thêm tài xế thành công', data: driver };
+    } catch (error) {
+        if (error instanceof Error) {
+            return { success: false, message: error.message ?? 'Thêm tài xế thất bại' };
+        } else {
+            console.log(error);
+            return { success: false, message: 'Có lỗi không xác định xảy ra' };
+        }
+    }
+}
+
+export async function editDriver(state: FormState, formData: FormData): Promise<FormState> {
+    const id = formData.get('id') as string;
+    const name = formData.get('name') as string;
+    const phone = formData.get('phone') as string;
+    const badge = formData.get('badge') as DriverBadge;
+    const license = formData.get('license') as string | null;
+    const vehicleId = formData.get('vehicleId') as string | null;
+    const previewImage = formData.get('previewImage') as string | null;
+    const imageUrl = formData.get('imageUrl') as File | null;
+    const shipmentIds = formData.get('shipmentIds');
+    const validatedFields = DriverFormSchema.safeParse({
+        name,
+        phone,
+        license,
+    });
+
+    if (!validatedFields.success) {
+        return {
+            errors: zodErrorsToTree(validatedFields.error),
+        };
+    }
+
+    try {
+        const driver = await Update(
+            id,
+            name,
+            phone,
+            badge,
+            !imageUrl || imageUrl.size === 0 || imageUrl.name === 'undefined'
+                ? previewImage ?? undefined
+                : imageUrl.name ?? undefined,
+            license || undefined,
+            vehicleId || undefined,
+        );
+        return { success: true, message: `Chỉnh sửa tài xế ${driver.name} thành công`, data: driver };
     } catch (err) {
-        return { success: false, message: (err as Error).message ?? 'Thêm tài xế thất bại' };
+        return { success: false, message: (err as Error).message ?? 'Chỉnh sửa tài xế thất bại' };
     }
 }
 
@@ -164,4 +221,24 @@ export async function getDrivers() {
         },
     });
     return drivers;
+}
+
+export async function deleteDrivers(ids: string[]): Promise<FormState> {
+    try {
+        await db.driver.deleteMany({
+            where: {
+                id: { in: ids },
+            },
+        });
+        return {
+            success: true,
+            message: `Đã xoá ${ids.length} tài xế`,
+        };
+    } catch (error) {
+        console.error(error);
+        return {
+            success: false,
+            message: 'Xoá thất bại',
+        };
+    }
 }

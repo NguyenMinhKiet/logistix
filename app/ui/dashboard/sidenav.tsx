@@ -8,26 +8,36 @@ import Logo from '@/app/ui/logo';
 import { useEffect, useState } from 'react';
 import { logout } from '@/app/lib/authActions';
 import { useRouter } from 'next/navigation';
+import { useNotificationStore } from '@/app/store/notificationStore';
+import { success } from 'zod';
 
 export default function SideNav() {
+    // Notification Store
+    const addNotification = useNotificationStore((s) => s.addNotification);
+
     const [loading, setLoading] = useState(false);
+
     const [username, setUsername] = useState('');
     const router = useRouter();
+
     useEffect(() => {
         fetch('/api/auth/session')
             .then((res) => res.json())
             .then((data) => setUsername(data.userName));
     }, []);
 
-    const handleSignOut = async () => {
+    const handleLogout = async () => {
         setLoading(true);
 
         const res = await logout();
 
+        if (!res) return null;
+
         if (res.success) {
-            // redirect client luôn
-            router.push(`/login?status=success&message=${encodeURIComponent(res.message)}`);
+            addNotification(res.message, 'success');
+            router.push(`/login`);
         } else {
+            addNotification(res.message, 'error');
         }
 
         setLoading(false);
@@ -57,7 +67,7 @@ export default function SideNav() {
                     <span className="hidden md:inline line-clamp-1">{username ? username : 'Loading . . .'}</span>
                 </div>
                 <button
-                    onClick={handleSignOut}
+                    onClick={handleLogout}
                     className="cursor-pointer flex h-[48px] w-full items-center justify-center gap-2 rounded-md bg-gray-50 p-2 text-sm font-medium hover:bg-sky-100 hover:text-blue-600"
                 >
                     <PowerIcon className="w-6" />

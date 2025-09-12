@@ -81,3 +81,14 @@ export async function deleteSession() {
     const cookieStore = await cookies();
     cookieStore.delete('session');
 }
+
+export async function getCurrentUser() {
+    const session = (await cookies()).get('session')?.value;
+    const payload = await decrypt(session);
+
+    if (!session || !payload) {
+        return null;
+    }
+
+    return payload;
+}

@@ -1,7 +1,7 @@
 'use server';
 
 import { SignupFormSchema, FormState, SigninFormSchema } from './definitions/definitions';
-import { createSession, deleteSession } from '@/app/lib/session';
+import { createSession, deleteSession, getCurrentUser } from '@/app/lib/session';
 import { zodErrorsToTree } from '@/app/lib/zodErrorsToTree';
 import { createUser, authorize } from '@/app/lib/actions';
 
@@ -28,39 +28,61 @@ export async function signUp(state: FormState, formData: FormData): Promise<Form
         // Gọi server action trực tiếp
         const user = await createUser(userName, userEmail, userPassword);
         await createSession(user.id);
-        console.log('User created: ', user);
         return { success: true, message: 'Tạo tài khoản thành công' };
-    } catch (err) {
-        return { success: false, message: (err as Error).message ?? 'Tạo tài khoản thất bại' };
+    } catch (error) {
+        if (error instanceof Error) {
+            return { success: false, message: error.message ?? 'Tạo tài khoản thất bại' };
+        } else {
+            console.log(error);
+        }
     }
 }
 
 export async function logout() {
-    await deleteSession();
-    return { success: true, message: 'Đăng xuất thành công' };
+    try {
+        await deleteSession();
+        return { success: true, message: 'Đăng xuất thành công' };
+    } catch (error) {
+        if (error instanceof Error) {
+            return { success: true, message: error.message };
+        } else {
+            console.log(error);
+        }
+    }
 }
 
 export async function signIn(state: FormState, formData: FormData): Promise<FormState> {
     const userEmail = formData.get('email') as string;
     const userPassword = formData.get('password') as string;
 
-    // // Validate form fields
-    // const validatedFields = SigninFormSchema.safeParse({
-    //     email: userEmail,
-    //     password: userPassword,
-    // });
+    // Validate form fields
+    const validatedFields = SigninFormSchema.safeParse({
+        email: userEmail,
+        password: userPassword,
+    });
 
-    // if (!validatedFields.success) {
-    //     return {
-    //         errors: zodErrorsToTree(validatedFields.error),
-    //     };
-    // }
+    if (!validatedFields.success) {
+        return {
+            errors: zodErrorsToTree(validatedFields.error),
+        };
+    }
+
     try {
+        // Check user Logged
+        const isLogged = await getCurrentUser();
+        if (isLogged) return { success: true, message: `Xin chào ${isLogged.userName}` };
+
         // Gọi server action trực tiếp
         const user = await authorize(userEmail, userPassword);
+
+        // Create new session
         await createSession(user.id);
         return { success: true, message: 'Đăng nhập thành công' };
-    } catch (err: any) {
-        return { success: false, message: err.message ?? 'Đăng nhập thất bại' };
+    } catch (error) {
+        if (error instanceof Error) {
+            return { success: false, message: error.message ?? 'Đăng nhập thất bại' };
+        } else {
+            console.log(error);
+        }
     }
 }

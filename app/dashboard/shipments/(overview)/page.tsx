@@ -1,6 +1,6 @@
 'use client';
 
-import { formatNumber } from '@/app/lib/format';
+import { formatNumber } from '@/app/helpers/format';
 import ButtonAction from '@/app/ui/buttons/ButtonAction';
 import ButtonInput from '@/app/ui/buttons/ButtonInput';
 import Card from '@/app/ui/dashboard/Card';
@@ -194,15 +194,6 @@ export default function ShipmentDashboardPage() {
             <div className="flex justify-between w-full px-5">
                 <h1 className="text-2xl font-medium">Overview</h1>
                 <div className="flex gap-3">
-                    {/* Search Box */}
-                    {/* <div className="flex items-center gap-2 border border-gray-300 p-2 rounded-xl bg-white shadow-sm">
-                        <MagnifyingGlassIcon className="w-5 h-5 text-gray-500 cursor-pointer" />
-                        <input
-                            type="text"
-                            placeholder="Tìm kiếm..."
-                            className="w-full outline-none text-sm text-gray-700 placeholder-gray-400"
-                        />
-                    </div> */}
                     <ButtonInput
                         Icon={MagnifyingGlassIcon}
                         type="text"
@@ -350,7 +341,7 @@ export default function ShipmentDashboardPage() {
                                 Icon={ArrowUpTrayIcon}
                                 label="Export"
                                 // onClick={exportToCSV}
-                                variant="default"
+                                variant="secondary"
                             />
                         </div>
 
