@@ -16,6 +16,7 @@ import {
     Cog6ToothIcon,
     ListBulletIcon,
     PowerIcon,
+    ChartBarSquareIcon,
 } from '@heroicons/react/24/outline';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -25,10 +26,11 @@ import { MenuIcon } from 'lucide-react';
 
 // Shipments
 const shipmentLinks = [
-    { name: 'Đơn hàng', href: 'shipments/orders', icon: InboxIcon },
-    { name: 'Xe', href: 'shipments/cars', icon: TruckIcon },
-    { name: 'Tài xế', href: 'shipments/drivers', icon: UserGroupIcon },
-    { name: 'Tuyến đường', href: 'shipments/routes', icon: MapIcon },
+    { name: 'Tổng quan', href: '/dashboard/shipments', icon: ChartBarSquareIcon },
+    { name: 'Đơn hàng', href: '/dashboard/shipments/orders', icon: InboxIcon },
+    { name: 'Xe', href: '/dashboard/shipments/cars', icon: TruckIcon },
+    { name: 'Tài xế', href: '/dashboard/shipments/drivers', icon: UserGroupIcon },
+    { name: 'Tuyến đường', href: '/dashboard/shipments/routes', icon: MapIcon },
 ];
 
 // Inventory
@@ -59,16 +61,15 @@ const settingsLinks = [
 // navlinks
 const links = [
     { name: 'Trang chính', href: '/dashboard', icon: HomeIcon },
-    { name: 'Quản lý vận tải', href: '/dashboard/shipments', icon: TruckIcon, subLinks: shipmentLinks },
-    { name: 'Quản lý kho', href: '/dashboard/inventories', icon: BuildingStorefrontIcon, subLinks: inventoryLinks },
+    { name: 'Quản lý vận tải', icon: TruckIcon, subLinks: shipmentLinks },
+    { name: 'Quản lý kho', icon: BuildingStorefrontIcon, subLinks: inventoryLinks },
     {
         name: 'Quản lý khách hàng & đối tác',
-        href: '/dashboard/customers',
         icon: UserGroupIcon,
         subLinks: customerLinks,
     },
-    { name: 'Hệ thống & cấu hình', href: '/dashboard/settings', icon: Cog6ToothIcon, subLinks: settingsLinks },
-    { name: 'Tài chính', href: '/dashboard/finances', icon: CurrencyDollarIcon, subLinks: financeLinks },
+    { name: 'Hệ thống & cấu hình', icon: Cog6ToothIcon, subLinks: settingsLinks },
+    { name: 'Tài chính', icon: CurrencyDollarIcon, subLinks: financeLinks },
 ];
 
 export default function NavLinks() {
@@ -108,8 +109,7 @@ export default function NavLinks() {
                         return (
                             <div key={link.name}>
                                 {/* Menu cha */}
-                                <Link
-                                    href={link.href}
+                                <div
                                     onClick={() => link.subLinks && toggleMenu(link.name)}
                                     className={clsx(
                                         'flex items-center justify-between p-2 cursor-pointer rounded-md hover:bg-sky-100',
@@ -125,7 +125,7 @@ export default function NavLinks() {
                                             <div className="w-0 h-0 border-t-[6px] border-b-[6px] border-l-[10px] border-t-transparent border-b-transparent border-l-black"></div>
                                         </span>
                                     )}
-                                </Link>
+                                </div>
 
                                 {/* Submenu */}
                                 {link.subLinks && isOpen && (
@@ -178,8 +178,7 @@ export default function NavLinks() {
                             <div key={link.name}>
                                 {/* Menu cha */}
                                 {link.subLinks ? (
-                                    <Link
-                                        href={link.href}
+                                    <div
                                         onClick={() => toggleMenu(link.name)}
                                         className={clsx(
                                             'flex items-center justify-between gap-2 p-2 rounded-md cursor-pointer hover:bg-sky-100',
@@ -193,7 +192,7 @@ export default function NavLinks() {
                                         <span className={clsx('transition-transform', isOpen && 'rotate-90')}>
                                             <div className="w-0 h-0 border-t-[6px] border-b-[6px] border-l-[10px] border-t-transparent border-b-transparent border-l-black"></div>
                                         </span>
-                                    </Link>
+                                    </div>
                                 ) : (
                                     <Link
                                         href={link.href!}

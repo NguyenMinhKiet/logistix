@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 import ButtonAction from './buttons/ButtonAction';
 import { PencilIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import clsx from 'clsx';
-import { wrapper } from '../styles/classes';
+import { badgeBorderTextColors, wrapper } from '../styles/classes';
 import ConfirmDialog from './modals/ConfirmDialog';
 import { useDrivers } from '../context/DriverContext';
 import EditDriverModal from './modals/EditDriverModal';
@@ -18,6 +18,8 @@ type DriverTableProps = {
 function DriverTable({ drivers, filterBy }: DriverTableProps) {
     const [selectAll, setSelectAll] = useState(false);
     const [selected, setSelected] = useState<{ id: string; name: string }[]>([]);
+    const [selectOne, setSelectOne] = useState<{ id: string; name: string } | null>(null);
+    const [showConfirmDialogAll, setShowConfirmDialogAll] = useState(false);
     const [showConfirmDialog, setShowConfirmDialog] = useState(false);
     const [editingDriver, setEditingDriver] = useState<Driver>();
     const { deleteDriverContext } = useDrivers();
@@ -63,19 +65,19 @@ function DriverTable({ drivers, filterBy }: DriverTableProps) {
                     <span className="text-sm">{selected.length} selected</span>
                     <div className="flex gap-2">
                         <ButtonAction
-                            label="Delete"
-                            variant="danger"
-                            onClick={() => setShowConfirmDialog(!showConfirmDialog)}
+                            Icon={XMarkIcon}
+                            variant="outlineDanger"
+                            onClick={() => setShowConfirmDialogAll(!showConfirmDialogAll)}
                         />
                         <ConfirmDialog
-                            isOpen={showConfirmDialog}
+                            isOpen={showConfirmDialogAll}
                             title="Xoá tài xế"
                             message={'Bạn có chắc chắn muốn xoá các tài xế này?'}
                             data={selected}
                             confirmText="Xoá"
                             cancelText="Huỷ"
                             onConfirm={handleDelete}
-                            onCancel={() => setShowConfirmDialog(false)}
+                            onCancel={() => setShowConfirmDialogAll(false)}
                         />
                     </div>
                 </div>
@@ -124,11 +126,7 @@ function DriverTable({ drivers, filterBy }: DriverTableProps) {
                                     <td className="py-4 px-6">
                                         <span
                                             className={`inline-block px-2 py-1 rounded-full text-xs font-semibold ${
-                                                driver.badge === 'BUSY'
-                                                    ? 'bg-amber-50 text-amber-500'
-                                                    : driver.badge === 'FREE'
-                                                    ? 'bg-green-50 text-green-500'
-                                                    : 'bg-gray-50 text-gray-500'
+                                                badgeBorderTextColors[driver.badge]
                                             }`}
                                         >
                                             {driver.badge}
@@ -137,11 +135,21 @@ function DriverTable({ drivers, filterBy }: DriverTableProps) {
                                 )}
 
                                 <td className="py-4 px-6">
-                                    <ButtonAction
-                                        Icon={PencilIcon}
-                                        variant="warning"
-                                        onClick={() => setEditingDriver(driver)}
-                                    />
+                                    <div className="flex item-center justify-center gap-2">
+                                        <ButtonAction
+                                            Icon={PencilIcon}
+                                            variant="outlineWarning"
+                                            onClick={() => setEditingDriver(driver)}
+                                        />
+                                        <ButtonAction
+                                            Icon={XMarkIcon}
+                                            variant="outlineDanger"
+                                            onClick={() => {
+                                                setSelectOne({ id: driver.id, name: driver.name });
+                                                setShowConfirmDialog(true);
+                                            }}
+                                        />
+                                    </div>
                                 </td>
                             </tr>
                         ))
@@ -158,6 +166,23 @@ function DriverTable({ drivers, filterBy }: DriverTableProps) {
             {editingDriver && (
                 <EditDriverModal data={editingDriver} isModalOpen={true} onClose={() => setEditingDriver(undefined)} />
             )}
+
+            <ConfirmDialog
+                isOpen={showConfirmDialog}
+                title="Xoá tài xế"
+                message={'Bạn có chắc chắn muốn xoá tài xế này?'}
+                data={selectOne ? [selectOne] : []}
+                confirmText="Xoá"
+                cancelText="Huỷ"
+                onConfirm={() => {
+                    if (selectOne) {
+                        deleteDriverContext(selectOne.id);
+                        setSelectOne(null);
+                    }
+                    setShowConfirmDialog(false);
+                }}
+                onCancel={() => setShowConfirmDialog(false)}
+            />
         </div>
     );
 }

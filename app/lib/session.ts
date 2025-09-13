@@ -1,9 +1,9 @@
 import 'server-only';
 
 import { SignJWT, jwtVerify } from 'jose';
-import { SessionPayload } from '@/app/lib/definitions/definitions';
 import { cookies } from 'next/headers';
 import { db } from '@/app/lib/db';
+import { SessionPayload } from '../types';
 
 const secretKey = process.env.SESSION_SECRET;
 const encodedKey = new TextEncoder().encode(secretKey);
@@ -90,5 +90,5 @@ export async function getCurrentUser() {
         return null;
     }
 
-    return payload;
+    return { id: payload.userId as string, name: payload.userName as string, role: payload.userRole as string };
 }

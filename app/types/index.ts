@@ -211,3 +211,25 @@ export interface Route {
     createdAt: Date;
     updatedAt: Date;
 }
+
+// Session
+export type SessionPayload = {
+    sessionId?: string;
+    userId?: string;
+    userName?: string;
+    userRole?: string;
+    expiresAt?: Date;
+};
+
+export type FormState =
+    | {
+          success?: boolean;
+          errors?: {
+              name?: string[];
+              phone?: string[];
+              imageUrl?: string[];
+              license?: string[];
+          };
+          message?: string;
+      }
+    | undefined;

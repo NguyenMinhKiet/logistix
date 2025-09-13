@@ -2,10 +2,9 @@
 import { createDriver } from '@/app/lib/actions/driverActions';
 import { DriverBadge, Shipment } from '@prisma/client';
 import Image from 'next/image';
-import { ChangeEvent, useActionState, useEffect, useState } from 'react';
+import { ChangeEvent, useActionState, useEffect, useRef, useState } from 'react';
 import { useDrivers } from '@/app/context/DriverContext';
 import Modal from './Modal';
-import toast from 'react-hot-toast';
 import { useNotificationStore } from '@/app/store/notificationStore';
 
 interface DriverFormData {
@@ -15,7 +14,6 @@ interface DriverFormData {
     badge: DriverBadge;
     license?: string;
     vehicleId?: string;
-    shipments: Shipment[];
 }
 
 interface AddDriverModalProps {
@@ -36,16 +34,20 @@ function AddDriverModal({ isModalOpen = false, onClose }: AddDriverModalProps) {
 
     const [formData, setFormData] = useState<DriverFormData>({
         name: '',
-        imageUrl: '',
         phone: '',
-        badge: DriverBadge.FREE,
         license: '',
-        vehicleId: undefined,
-        shipments: [],
+        vehicleId: '',
+        badge: DriverBadge.FREE,
     });
+
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+        const { name, value } = e.target;
+        setFormData((prev) => ({ ...prev, [name]: value }));
+    };
 
     useEffect(() => {
         if (!state?.message) return;
+        console.log(state);
         if (state.success) {
             addNotification(state.message, 'success');
         } else {
@@ -54,56 +56,26 @@ function AddDriverModal({ isModalOpen = false, onClose }: AddDriverModalProps) {
     }, [state, addNotification]);
 
     useEffect(() => {
-        if (state?.message) {
-            if (state?.success) {
-                toast.success(state.message, { duration: 2000 });
-            } else {
-                toast.error(state.message, { duration: 3000 });
-            }
-        }
-    }, [state?.message, state?.success]);
-
-    useEffect(() => {
-        if (!isModalOpen) {
-            setFormData({
-                name: '',
-                phone: '',
-                license: '',
-                vehicleId: '',
-                imageUrl: '',
-                badge: DriverBadge.FREE,
-                shipments: [],
-            });
-            setPreviewImage('/nguyenminhkiet.JPG');
-        }
-    }, [isModalOpen]);
-
-    useEffect(() => {
-        // nếu submit thành công thì gọi onClose
         if (state?.success) {
+            formRef.current?.reset(); // reset input
+            setPreviewImage('/nguyenminhkiet.JPG'); // reset ảnh
             if (state.data) {
                 addDriverContext(state.data);
             }
             onClose();
         }
-    }, [state?.success, onClose]);
+    }, [state?.success]);
 
-    const handleInputChange = (e: ChangeEvent<HTMLInputElement>): void => {
-        const { name, value } = e.target;
-        setFormData((prev) => ({
-            ...prev,
-            [name]: value,
-        }));
-    };
+    const formRef = useRef<HTMLFormElement>(null);
 
     return (
         <Modal
             isOpen={isModalOpen}
             title="Add New Driver"
             children={
-                <form action={formAction} className="space-y-4 sm:space-y-6">
+                <form ref={formRef} action={formAction} className="space-y-4 sm:space-y-6">
                     {/* Image Preview */}
-                    <div className="flex items-center justify-center py-2">
+                    <div className="flex items-center justify-center py-2 relative">
                         <div className="border rounded-xl p-2 ">
                             {previewImage && (
                                 <Image
@@ -116,41 +88,34 @@ function AddDriverModal({ isModalOpen = false, onClose }: AddDriverModalProps) {
                             )}
                             <input type="hidden" name="previewImage" value={imageFile} />
                         </div>
-                    </div>
 
-                    {/* Upload Input */}
-                    <div>
-                        <label
-                            htmlFor="image"
-                            className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2"
-                        >
-                            Image
-                        </label>
-                        <input
-                            type="file"
-                            id="imageUrl"
-                            name="imageUrl"
-                            accept="image/*"
-                            onChange={(e) => {
-                                const file = e.target.files?.[0];
-                                if (file) {
-                                    const objectUrl = URL.createObjectURL(file);
-                                    setPreviewImage(objectUrl);
-                                    setImageFile(file.name);
+                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[100px] h-[150px] opacity-0 hover:opacity-100 inset-0 flex flex-col items-center justify-center bg-white/70 rounded-xl transition">
+                            <label
+                                htmlFor="imageUrl"
+                                className="flex flex-col items-center justify-center w-full h-full border-2 border-dashed rounded-xl cursor-pointer hover:bg-gray-50"
+                            >
+                                <span className="text-sm text-gray-600">Choose File</span>
+                                <input
+                                    type="file"
+                                    id="imageUrl"
+                                    name="imageUrl"
+                                    accept="image/*"
+                                    onChange={(e) => {
+                                        const file = e.target.files?.[0];
+                                        if (file) {
+                                            const objectUrl = URL.createObjectURL(file);
+                                            setPreviewImage(objectUrl);
+                                            setImageFile(file.name);
+                                        }
+                                    }}
+                                    className="hidden"
+                                />
+                            </label>
 
-                                    // cleanup object URL khi file thay đổi
-                                    return () => URL.revokeObjectURL(objectUrl);
-                                }
-                            }}
-                            className={`w-full px-3 sm:px-4 py-2 sm:py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-sm sm:text-base ${
-                                state?.errors?.imageUrl
-                                    ? 'border-red-300 bg-red-50'
-                                    : 'border-gray-300 hover:border-gray-400'
-                            }`}
-                        />
-                        {state?.errors?.imageUrl && (
-                            <p className="mt-1 text-xs sm:text-sm text-red-600">{state?.errors?.imageUrl}</p>
-                        )}
+                            {state?.errors?.imageUrl && (
+                                <p className="mt-1 text-xs sm:text-sm text-red-600">{state?.errors?.imageUrl}</p>
+                            )}
+                        </div>
                     </div>
 
                     {/* Email Input */}
@@ -166,7 +131,7 @@ function AddDriverModal({ isModalOpen = false, onClose }: AddDriverModalProps) {
                             id="name"
                             name="name"
                             value={formData.name}
-                            onChange={handleInputChange}
+                            onChange={handleChange}
                             className={`w-full px-3 sm:px-4 py-2 sm:py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-sm sm:text-base ${
                                 state?.errors?.name
                                     ? 'border-red-300 bg-red-50'
@@ -192,7 +157,7 @@ function AddDriverModal({ isModalOpen = false, onClose }: AddDriverModalProps) {
                             id="phone"
                             name="phone"
                             value={formData.phone}
-                            onChange={handleInputChange}
+                            onChange={handleChange}
                             className={`w-full px-3 sm:px-4 py-2 sm:py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-sm sm:text-base ${
                                 state?.errors?.phone
                                     ? 'border-red-300 bg-red-50'
@@ -217,7 +182,7 @@ function AddDriverModal({ isModalOpen = false, onClose }: AddDriverModalProps) {
                             id="license"
                             name="license"
                             value={formData.license}
-                            onChange={handleInputChange}
+                            onChange={handleChange}
                             className={`w-full px-3 sm:px-4 py-2 sm:py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-sm sm:text-base ${
                                 state?.errors?.license
                                     ? 'border-red-300 bg-red-50'
@@ -241,8 +206,8 @@ function AddDriverModal({ isModalOpen = false, onClose }: AddDriverModalProps) {
                         <select
                             id="vehicleId"
                             name="vehicleId"
-                            value={formData.vehicleId}
-                            // onChange={(e) => onChange?.(e.target.value)}
+                            value={formData.badge ?? ''}
+                            onChange={handleChange}
                             className={`w-full px-3 sm:px-4 py-2 sm:py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-sm sm:text-base border-gray-300 hover:border-gray-400`}
                         >
                             <option value="">Select a vehicle</option>

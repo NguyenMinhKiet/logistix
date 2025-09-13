@@ -3,6 +3,7 @@ import { db } from '@/app/lib/db';
 import { DriverFormSchema } from '../formSchema';
 import { zodErrorsToTree } from '../zodErrorsToTree';
 import { Driver, DriverBadge } from '@prisma/client';
+import { AppError } from '../errors';
 
 export type FormState =
     | {
@@ -18,19 +19,14 @@ export type FormState =
       }
     | undefined;
 
-// CRUD
+// ==================== CRUD ====================
+
 export async function Create(name: string, phone: string, imageUrl?: string, license?: string, vehicleId?: string) {
-    // Kiểm tra số điện thoại trùng
     const isExisting = await db.driver.findUnique({ where: { phone } });
     if (isExisting) {
-        throw {
-            field: 'phone',
-            message: `Số điện thoại '${phone}' đã tồn tại !`,
-            status: 409,
-        };
+        throw new AppError(`Số điện thoại '${phone}' đã tồn tại!`, 'phone', 409);
     }
 
-    // Tạo driver mới
     return await db.driver.create({
         data: {
             name,
@@ -52,9 +48,8 @@ export async function Update(
     imageUrl?: string,
     license?: string,
     vehicleId?: string,
-    shipmentIds?: string[], // 👈 sửa thành mảng id shipments
+    shipmentIds?: string[],
 ) {
-    // Kiểm tra số điện thoại (không tính driver hiện tại)
     const isExisting = await db.driver.findFirst({
         where: {
             phone,
@@ -62,11 +57,7 @@ export async function Update(
         },
     });
     if (isExisting) {
-        throw {
-            field: 'phone',
-            message: `Số điện thoại '${phone}' đã tồn tại !`,
-            status: 409,
-        };
+        throw new AppError(`Số điện thoại '${phone}' đã tồn tại!`, 'phone', 409);
     }
 
     return await db.driver.update({
@@ -85,51 +76,30 @@ export async function Update(
 }
 
 export async function deleteDriver(id: string) {
-    try {
-        // Kiểm tra driver tồn tại
-        const driver = await db.driver.findUnique({
-            where: { id },
-            include: { vehicle: true, shipments: true },
-        });
+    const driver = await db.driver.findUnique({
+        where: { id },
+        include: { vehicle: true, shipments: true },
+    });
 
-        if (!driver) {
-            return {
-                success: false,
-                message: `Driver với id '${id}' không tồn tại!`,
-                status: 404,
-            };
-        }
-
-        // Ngắt quan hệ trước khi xoá
-        await db.driver.update({
-            where: { id },
-            data: {
-                vehicleId: null, // xoá liên kết vehicle
-                shipments: { set: [] }, // xoá liên kết shipment
-            },
-        });
-
-        // Xoá driver
-        await db.driver.delete({
-            where: { id },
-        });
-
-        return {
-            success: true,
-            message: `Đã xoá driver '${driver.name}'`,
-            status: 200,
-        };
-    } catch (error) {
-        console.error('Lỗi xoá driver:', error);
-        return {
-            success: false,
-            message: 'Lỗi hệ thống khi xoá driver',
-            status: 500,
-        };
+    if (!driver) {
+        throw new AppError(`Driver với id '${id}' không tồn tại!`, undefined, 404);
     }
+
+    await db.driver.update({
+        where: { id },
+        data: {
+            vehicleId: null,
+            shipments: { set: [] },
+        },
+    });
+
+    await db.driver.delete({ where: { id } });
+
+    return driver;
 }
 
-// CAll Server Action
+// ==================== Server Actions ====================
+
 export async function createDriver(state: FormState, formData: FormData): Promise<FormState> {
     const name = formData.get('name') as string;
     const phone = formData.get('phone') as string;
@@ -137,16 +107,11 @@ export async function createDriver(state: FormState, formData: FormData): Promis
     const previewImage = formData.get('previewImage') as string;
     const license = formData.get('license') as string;
     const vehicleId = formData.get('vehicleId') as string;
-    const validatedFields = DriverFormSchema.safeParse({
-        name,
-        phone,
-        license,
-    });
+
+    const validatedFields = DriverFormSchema.safeParse({ name, phone, license });
 
     if (!validatedFields.success) {
-        return {
-            errors: zodErrorsToTree(validatedFields.error),
-        };
+        return { errors: zodErrorsToTree(validatedFields.error) };
     }
 
     try {
@@ -159,14 +124,18 @@ export async function createDriver(state: FormState, formData: FormData): Promis
             license || undefined,
             vehicleId || undefined,
         );
+
         return { success: true, message: 'Thêm tài xế thành công', data: driver };
     } catch (error) {
-        if (error instanceof Error) {
-            return { success: false, message: error.message ?? 'Thêm tài xế thất bại' };
-        } else {
-            console.log(error);
-            return { success: false, message: 'Có lỗi không xác định xảy ra' };
+        if (error instanceof AppError) {
+            return {
+                success: false,
+                message: error.message,
+                errors: error.field ? { [error.field]: [error.message] } : undefined,
+            };
         }
+        console.error(error);
+        return { success: false, message: 'Thêm tài xế thất bại. Vui lòng thử lại sau.' };
     }
 }
 
@@ -177,68 +146,72 @@ export async function editDriver(state: FormState, formData: FormData): Promise<
     const badge = formData.get('badge') as DriverBadge;
     const license = formData.get('license') as string | null;
     const vehicleId = formData.get('vehicleId') as string | null;
-    const previewImage = formData.get('previewImage') as string | null;
+    const previewImage = formData.get('previewImage') as string;
     const imageUrl = formData.get('imageUrl') as File | null;
-    const shipmentIds = formData.get('shipmentIds');
-    const validatedFields = DriverFormSchema.safeParse({
-        name,
-        phone,
-        license,
-    });
+
+    const validatedFields = DriverFormSchema.safeParse({ name, phone, license });
 
     if (!validatedFields.success) {
-        return {
-            errors: zodErrorsToTree(validatedFields.error),
-        };
+        return { errors: zodErrorsToTree(validatedFields.error) };
     }
 
     try {
+        const oldDriver = await db.driver.findUnique({ where: { id } });
+        if (!oldDriver) {
+            throw new AppError('Không tìm thấy thông tin tài xế.', undefined, 404);
+        }
+
+        const newVehicleId = vehicleId || null;
+        if (
+            name === oldDriver.name &&
+            phone === oldDriver.phone &&
+            badge === oldDriver.badge &&
+            license === oldDriver.license &&
+            (imageUrl === oldDriver.imageUrl || previewImage === oldDriver.imageUrl) &&
+            newVehicleId === oldDriver.vehicleId
+        ) {
+            return { success: false, message: 'Bạn chưa thay đổi thông tin nào.' };
+        }
+
         const driver = await Update(
             id,
             name,
             phone,
             badge,
-            !imageUrl || imageUrl.size === 0 || imageUrl.name === 'undefined'
-                ? previewImage ?? undefined
-                : imageUrl.name ?? undefined,
+            !imageUrl || imageUrl.size === 0 ? previewImage ?? undefined : imageUrl.name ?? undefined,
             license || undefined,
             vehicleId || undefined,
         );
-        return { success: true, message: `Chỉnh sửa tài xế ${driver.name} thành công`, data: driver };
-    } catch (err) {
-        return { success: false, message: (err as Error).message ?? 'Chỉnh sửa tài xế thất bại' };
+
+        return { success: true, message: `Thông tin tài xế "${driver.name}" đã được cập nhật.`, data: driver };
+    } catch (error) {
+        if (error instanceof AppError) {
+            return {
+                success: false,
+                message: error.message,
+                errors: error.field ? { [error.field]: [error.message] } : undefined,
+            };
+        }
+        console.error(error);
+        return { success: false, message: 'Có lỗi xảy ra. Vui lòng thử lại sau.' };
     }
 }
 
+// ==================== Utility ====================
+
 export async function getDrivers() {
-    const drivers = await db.driver.findMany({
+    return await db.driver.findMany({
         orderBy: { createdAt: 'desc' },
-        include: {
-            vehicle: true,
-            shipments: {
-                include: { order: true },
-            },
-        },
+        include: { vehicle: true, shipments: { include: { order: true } } },
     });
-    return drivers;
 }
 
 export async function deleteDrivers(ids: string[]): Promise<FormState> {
     try {
-        await db.driver.deleteMany({
-            where: {
-                id: { in: ids },
-            },
-        });
-        return {
-            success: true,
-            message: `Đã xoá ${ids.length} tài xế`,
-        };
+        await db.driver.deleteMany({ where: { id: { in: ids } } });
+        return { success: true, message: `Đã xoá ${ids.length} tài xế` };
     } catch (error) {
         console.error(error);
-        return {
-            success: false,
-            message: 'Xoá thất bại',
-        };
+        return { success: false, message: 'Xoá thất bại. Vui lòng thử lại sau.' };
     }
 }

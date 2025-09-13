@@ -1,5 +1,5 @@
 'use client';
-import clsx from 'clsx';
+
 import Image from 'next/image';
 
 import { editDriver } from '@/app/lib/actions/driverActions';
@@ -7,13 +7,11 @@ import { Driver, DriverBadge } from '@prisma/client';
 import { ChangeEvent, useActionState, useEffect, useState } from 'react';
 import { useDrivers } from '@/app/context/DriverContext';
 import Modal from './Modal';
-import toast from 'react-hot-toast';
 import { useNotificationStore } from '@/app/store/notificationStore';
 
 interface DriverFormData {
     id: string;
     name: string;
-    imageUrl?: string | null;
     phone: string;
     badge: DriverBadge;
     license?: string | null;
@@ -41,7 +39,6 @@ function EditDriverModal({ isModalOpen = false, onClose, data }: EditDriverModal
     const [formData, setFormData] = useState<DriverFormData>({
         id: data.id,
         name: data.name,
-        imageUrl: data.imageUrl,
         phone: data.phone,
         badge: data.badge,
         license: data.license,
@@ -51,6 +48,7 @@ function EditDriverModal({ isModalOpen = false, onClose, data }: EditDriverModal
     // Đặt preview image
     useEffect(() => {
         setPreviewImage(`/${data.imageUrl}`);
+        setImageFile(data.imageUrl ?? '');
     }, [data]);
 
     // Tắt modal khi thành công
@@ -263,7 +261,7 @@ function EditDriverModal({ isModalOpen = false, onClose, data }: EditDriverModal
                         aria-disabled={isPending}
                         className="cursor-pointer w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-2.5 sm:py-3 lg:py-4 px-4 rounded-lg font-medium hover:from-blue-700 hover:to-indigo-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.02] active:scale-[0.98] text-sm sm:text-base"
                     >
-                        <span className="text-sm sm:text-base lg:text-lg">{isPending ? 'Đang xử lý ...' : 'Thêm'}</span>
+                        <span className="text-sm sm:text-base lg:text-lg">{isPending ? 'Đang xử lý ...' : 'Lưu'}</span>
                     </button>
                 </form>
             }

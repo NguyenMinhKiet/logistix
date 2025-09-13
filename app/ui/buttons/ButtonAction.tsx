@@ -1,12 +1,13 @@
 'use client';
 
 import clsx from 'clsx';
-import { da } from 'zod/locales';
+import { Children, ReactNode } from 'react';
 
 interface ActionButtonProps {
     Icon?: React.ElementType;
     label?: string;
     onClick?: () => void;
+    children?: ReactNode;
     variant?:
         | 'primary'
         | 'secondary'
@@ -25,9 +26,9 @@ interface ActionButtonProps {
         | 'textDark';
 }
 
-function ButtonAction({ Icon, label, onClick, variant = 'secondary' }: ActionButtonProps) {
+function ButtonAction({ Icon, label, onClick, children, variant = 'secondary' }: ActionButtonProps) {
     const baseStyle =
-        'flex items-center gap-2 px-4 py-2 border rounded-xl font-medium  transition-colors cursor-pointer';
+        'relative flex items-center justify-center gap-2 px-4 py-2 border rounded-xl font-medium  transition-colors cursor-pointer';
 
     const variants = {
         primary: 'bg-blue-500 text-white hover:bg-blue-600',
@@ -51,6 +52,7 @@ function ButtonAction({ Icon, label, onClick, variant = 'secondary' }: ActionBut
         <button onClick={onClick} className={clsx(baseStyle, variants[variant])}>
             {Icon && <Icon className="w-4 h-4" />}
             {label}
+            {children}
         </button>
     );
 }

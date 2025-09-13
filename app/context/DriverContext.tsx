@@ -15,8 +15,12 @@ interface DriverContextType {
 
 const DriverContext = createContext<DriverContextType | undefined>(undefined);
 
-export const DriverProvider = ({ children }: { children: ReactNode }) => {
-    const [drivers, setDrivers] = useState<Driver[]>([]);
+type DriverProviderProps = {
+    children: ReactNode;
+    initialDrivers: Driver[];
+};
+export const DriverProvider = ({ children, initialDrivers }: DriverProviderProps) => {
+    const [drivers, setDrivers] = useState<Driver[]>(initialDrivers);
 
     // Reset Data
     const refreshDrivers = async () => {

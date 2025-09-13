@@ -1,9 +1,10 @@
 'use server';
 
-import { SignupFormSchema, FormState, SigninFormSchema } from './definitions/definitions';
 import { createSession, deleteSession, getCurrentUser } from '@/app/lib/session';
 import { zodErrorsToTree } from '@/app/lib/zodErrorsToTree';
 import { createUser, authorize } from '@/app/lib/actions';
+import { FormState } from '../types';
+import { SigninFormSchema, SignupFormSchema } from './formSchema';
 
 export async function signUp(state: FormState, formData: FormData): Promise<FormState> {
     const userName = formData.get('name') as string;
@@ -70,7 +71,7 @@ export async function signIn(state: FormState, formData: FormData): Promise<Form
     try {
         // Check user Logged
         const isLogged = await getCurrentUser();
-        if (isLogged) return { success: true, message: `Xin chào ${isLogged.userName}` };
+        if (isLogged) return { success: true, message: `Xin chào ${isLogged.name}` };
 
         // Gọi server action trực tiếp
         const user = await authorize(userEmail, userPassword);
