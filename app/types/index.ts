@@ -1,12 +1,52 @@
-import {
-    $Enums,
-    InstanceStatus,
-    OrderStatus,
-    PaymentMethod,
-    Role,
-    ShipmentStatus,
-    TransactionType,
-} from '@prisma/client';
+// Enums
+export enum EInstanceStatus {
+    AVAILABLE = 'AVAILABLE',
+    IN_STOCK = 'IN_STOCK',
+    SOLD = 'SOLD',
+    DEFECTIVE = 'DEFECTIVE',
+}
+
+export enum EOrderStatus {
+    PENDING = 'PENDING',
+    CONFIRMED = 'CONFIRMED',
+    PROCESSING = 'PROCESSING',
+    SHIPPED = 'SHIPPED',
+    DELIVERED = 'DELIVERED',
+    CANCELLED = 'CANCELLED',
+}
+
+export enum EPaymentMethod {
+    CASH = 'CASH',
+    CREDIT_CARD = 'CREDIT_CARD',
+    BANK_TRANSFER = 'BANK_TRANSFER',
+    DIGITAL_WALLET = 'DIGITAL_WALLET',
+}
+
+export enum ERole {
+    ADMIN = 'ADMIN',
+    MANAGER = 'MANAGER',
+    STAFF = 'STAFF',
+}
+
+export enum EShipmentStatus {
+    PENDING = 'PENDING',
+    PICKED_UP = 'PICKED_UP',
+    IN_TRANSIT = 'IN_TRANSIT',
+    DELIVERED = 'DELIVERED',
+    FAILED = 'FAILED',
+}
+
+export enum ETransactionType {
+    IN = 'IN',
+    OUT = 'OUT',
+    TRANSFER = 'TRANSFER',
+}
+
+export enum EDriverStatus {
+    BUSY = 'BUSY',
+    FREE = 'FREE',
+    OFFLINE = 'OFFLINE',
+}
 
 // Interfaces
 export interface User {
@@ -14,7 +54,7 @@ export interface User {
     name: string;
     email: string;
     password: string;
-    role: Role;
+    role: ERole;
     warehouses?: Warehouse[] | null;
     stores?: Store[] | null;
     createdAt: Date;
@@ -77,7 +117,7 @@ export interface Inventory {
 
 export interface Transaction {
     id: string;
-    type: TransactionType;
+    type: ETransactionType;
     product: Product;
     productId: string;
     quantity: number;
@@ -97,7 +137,7 @@ export interface ProductInstance {
     productId: string;
     imei?: string | null;
     serial?: string | null;
-    status: InstanceStatus;
+    status: EInstanceStatus;
     warehouse?: Warehouse | null;
     warehouseId?: string | null;
     store?: Store | null;
@@ -123,7 +163,7 @@ export interface Order {
     customerId: string;
     user: User;
     userId: string;
-    status: OrderStatus;
+    status: EOrderStatus;
     items: OrderItem[];
     total: number;
     payments: Payment[];
@@ -146,7 +186,7 @@ export interface Payment {
     order?: Order | null;
     orderId?: string | null;
     amount: number;
-    method: PaymentMethod;
+    method: EPaymentMethod;
     createdAt: Date;
     updatedAt: Date;
 }
@@ -161,7 +201,7 @@ export interface Shipment {
     vehicleId?: string | null;
     route?: Route | null;
     routeId?: string | null;
-    status: ShipmentStatus;
+    status: EShipmentStatus;
     tracking?: string | null;
     createdAt: Date;
     updatedAt: Date;
@@ -193,7 +233,7 @@ export interface Driver {
     name: string;
     imageUrl?: string | null;
     phone: string;
-    badge: $Enums.DriverBadge;
+    badge: EDriverStatus;
     license?: string | null;
     vehicle?: Vehicle | null;
     vehicleId?: string | null;
@@ -221,15 +261,14 @@ export type SessionPayload = {
     expiresAt?: Date;
 };
 
-export type FormState =
-    | {
-          success?: boolean;
-          errors?: {
-              name?: string[];
-              phone?: string[];
-              imageUrl?: string[];
-              license?: string[];
-          };
-          message?: string;
-      }
-    | undefined;
+export interface ApiResponse<T> {
+    data?: T;
+    error?: string;
+    success: boolean;
+}
+
+export interface UserSession {
+    id: string;
+    name: string;
+    role: string;
+}

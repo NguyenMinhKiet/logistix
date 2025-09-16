@@ -17,7 +17,7 @@ model User {
   imageUrl  String?
   email     String    @unique
   password  String
-  role      Role      @default(USER)
+  role      ERole      @default(USER)
   warehouses Warehouse[] @relation("UserWarehouses")
   stores     Store[]     @relation("UserStores")
   orders Order[]
@@ -27,7 +27,7 @@ model User {
   updatedAt DateTime  @updatedAt
 }
 
-enum Role {
+enum ERole {
   ADMIN
   MANAGER
   STAFF
@@ -112,7 +112,7 @@ model Inventory {
 // ==============================
 model Transaction {
   id          String      @id @default(uuid())
-  type        TransactionType
+  type        ETransactionType
   imageUrl  String?
   product     Product     @relation(fields: [productId], references: [id])
   productId   String
@@ -127,7 +127,7 @@ model Transaction {
   createdAt   DateTime    @default(now())
 }
 
-enum TransactionType {
+enum ETransactionType {
   IMPORT      // nhập kho
   EXPORT      // xuất kho
   TRANSFER    // chuyển kho
@@ -143,7 +143,7 @@ model ProductInstance {
   productId   String
   imei        String?    @unique   // với điện thoại/laptop
   serial      String?    @unique   // với sản phẩm khác
-  status      InstanceStatus @default(IN_STOCK)
+  status      EInstanceStatus @default(IN_STOCK)
   warehouse   Warehouse? @relation(fields: [warehouseId], references: [id])
   warehouseId String?
   store       Store?     @relation(fields: [storeId], references: [id])
@@ -152,7 +152,7 @@ model ProductInstance {
   updatedAt   DateTime   @updatedAt
 }
 
-enum InstanceStatus {
+enum EInstanceStatus {
   IN_STOCK   // còn trong kho
   TRANSFERRED // đang chuyển kho
   SOLD       // đã bán
@@ -187,7 +187,7 @@ model Order {
   user      User       @relation(fields: [userId], references: [id]) // nhân viên tạo đơn
   userId    String
   imageUrl  String?
-  status    OrderStatus @default(PENDING)
+  status    EOrderStatus @default(PENDING)
   items     OrderItem[]
   total     Float
   payments  Payment[]
@@ -205,7 +205,7 @@ model OrderItem {
   price     Float
 }
 
-enum OrderStatus {
+enum EOrderStatus {
   PENDING
   PAID
   CANCELLED
@@ -221,19 +221,19 @@ model Payment {
   order     Order?   @relation(fields: [orderId], references: [id])
   orderId   String?
   amount    Float
-  method    PaymentMethod
+  method    EPaymentMethod
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
 }
 
-enum PaymentMethod {
+enum EPaymentMethod {
   CASH
   BANK_TRANSFER
   CREDIT_CARD
 }
 
-model Shipment {
+  model Shipment {
   id        String   @id @default(uuid())
   order     Order    @relation(fields: [orderId], references: [id])
   orderId   String
@@ -243,20 +243,28 @@ model Shipment {
   vehicleId String?
   route     Route?   @relation(fields: [routeId], references: [id])
   routeId   String?
-  status    ShipmentStatus @default(PENDING)
+
+  status    EShipmentStatus @default(PENDING)
   tracking  String?
+
+  etaStart  DateTime?     // ngày dự kiến bắt đầu
+  etaEnd    DateTime?     // ngày dự kiến kết thúc
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-
 }
 
 
-enum ShipmentStatus {
-  PENDING
-  IN_TRANSIT
-  DELIVERED
-  RETURNED
+
+enum EShipmentStatus {
+  PENDING        // Chờ xử lý
+  PICKED_UP      // Lấy hàng thành công
+  IN_TRANSIT     // Trên đường vận chuyển
+  DELIVERED      // Đã giao
+  RETURNED       // Trả lại
+  CANCELLED      // Hủy đơn
 }
+
 
 model Supplier {
   id        String        @id @default(uuid())
@@ -287,7 +295,7 @@ model Driver {
   id        String   @id @default(uuid())
   name      String
   imageUrl  String?
-  badge     DriverBadge @default(FREE)
+  badge     EDriverStatus @default(FREE)
   phone     String   @unique
   license   String?
   vehicle   Vehicle? @relation(fields: [vehicleId], references: [id])
@@ -297,7 +305,7 @@ model Driver {
   updatedAt DateTime @updatedAt
 
 }
-enum DriverBadge {
+enum EDriverStatus {
   BUSY
   FREE
   OFFLINE

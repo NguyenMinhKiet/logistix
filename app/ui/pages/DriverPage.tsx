@@ -1,7 +1,7 @@
 'use client';
 
 import { ChangeEvent, useEffect, useState } from 'react';
-import Breadcrumb from '@/app/ui/Breadcrumb';
+import Breadcrumb from '@/app/ui/common/Breadcrumb';
 import ButtonAction from '@/app/ui/buttons/ButtonAction';
 import ButtonInput from '@/app/ui/buttons/ButtonInput';
 import AddDriverModal from '../modals/AddDriverModal';
@@ -11,49 +11,28 @@ import clsx from 'clsx';
 import { FilterIcon, Grid2X2, PlusIcon } from 'lucide-react';
 import { Bars3Icon, CheckIcon, MagnifyingGlassIcon, UsersIcon } from '@heroicons/react/24/outline';
 import { wrapper } from '@/app/styles/classes';
-import { DriverBadge } from '@prisma/client';
 import { useDrivers } from '@/app/context/DriverContext';
+import { useDriverStats } from '@/app/hooks/driverHooks/useDriverStats';
+import { useDriverFilters } from '@/app/hooks/driverHooks/useDriverFilters';
+import { StatsCard } from '../dashboard/StatsCard';
 
 function DriverPage() {
     const { drivers } = useDrivers();
+    const stats = useDriverStats(drivers);
+    const { searchTerm, setSearchTerm, sortBy, setSortBy, filterBy, setFilterBy, sortedDrivers } =
+        useDriverFilters(drivers);
 
-    const [searchBtn, setSearchBtn] = useState('');
     const [displayType, setDisplayType] = useState<'grid' | 'list'>('list');
-
     const [showAddDriverModal, setShowAddDriverModal] = useState(false);
     const [showSortFilter, setShowSortFilter] = useState(false);
 
-    const [sortBy, setSortBy] = useState<'name' | 'badge' | ''>('name');
-    const [filterBy, setFilterBy] = useState<('name' | 'phone' | 'badge')[]>(['name', 'phone', 'badge']);
-
-    const [countFreeDriver, setCountFreeDriver] = useState(0);
-    const [countBusyDriver, setCountBusyDriver] = useState(0);
-    const [countTotalDriver, setCountTotalDriver] = useState(0);
-    const [countOfflineDriver, setCountOfflineDriver] = useState(0);
-
+    const handleSearchChange = (e: ChangeEvent<HTMLInputElement>) => {
+        setSearchTerm(e.target.value);
+    };
     useEffect(() => {
-        setCountTotalDriver(drivers.length);
-        setCountBusyDriver(drivers.filter((driver) => driver.badge === DriverBadge.BUSY).length);
-        setCountFreeDriver(drivers.filter((driver) => driver.badge === DriverBadge.FREE).length);
-        setCountOfflineDriver(drivers.filter((driver) => driver.badge === DriverBadge.OFFLINE).length);
+        console.log('Drivers: ', drivers);
     }, [drivers]);
 
-    // Filter + Search
-    const filteredDrivers = drivers.filter((driver) => {
-        const searchLower = searchBtn.toLowerCase();
-        return driver.name.toLowerCase().includes(searchLower) || driver.phone.toLowerCase().includes(searchLower);
-    });
-
-    // Sort
-    const sortedDrivers = [...filteredDrivers].sort((a, b) => {
-        if (sortBy === 'name') return a.name.localeCompare(b.name);
-        if (sortBy === 'badge') return a.badge.localeCompare(b.badge);
-        return 0;
-    });
-
-    const handleSearch = (e: ChangeEvent<HTMLInputElement>) => {
-        setSearchBtn(e.target.value);
-    };
     return (
         <>
             {/* Header */}
@@ -69,46 +48,10 @@ function DriverPage() {
 
                 <div className="flex flex-col p-5 justify-end items-end">
                     <div className="flex gap-3">
-                        {/* Total Drivers */}
-                        <div className="flex flex-col shadow-md rounded-xl p-2 px-3 w-52 bg-white/50 text-black">
-                            <h1 className="text-gray-700">Total Drivers</h1>
-                            <div className="flex justify-between items-center">
-                                <span className="font-semibold text-xl">{countTotalDriver}</span>
-                                <div className="flex items-center justify-center rounded-full border border-white p-2 bg-white">
-                                    <UsersIcon className="w-5 h-5" />
-                                </div>
-                            </div>
-                        </div>
-                        {/* Busy */}
-                        <div className="flex flex-col shadow-md rounded-xl p-2 px-3 w-52 bg-white/50 text-black">
-                            <h1 className="text-gray-700">Busy</h1>
-                            <div className="flex justify-between items-center">
-                                <span className="font-semibold text-xl">{countBusyDriver}</span>
-                                <div className="flex items-center justify-center rounded-full border border-white p-2 bg-white">
-                                    <UsersIcon className="w-5 h-5 text-amber-500" />
-                                </div>
-                            </div>
-                        </div>
-                        {/* Free */}
-                        <div className="flex flex-col shadow-md rounded-xl p-2 px-3 w-52 bg-white/50 text-black">
-                            <h1 className="text-gray-700">Free</h1>
-                            <div className="flex justify-between items-center">
-                                <span className="font-semibold text-xl">{countFreeDriver}</span>
-                                <div className="flex items-center justify-center rounded-full border border-white p-2 bg-white">
-                                    <UsersIcon className="w-5 h-5 text-green-500" />
-                                </div>
-                            </div>
-                        </div>
-                        {/* Offline */}
-                        <div className="flex flex-col shadow-md rounded-xl p-2 px-3 w-52 bg-white/50 text-black">
-                            <h1 className="text-gray-700">Offline</h1>
-                            <div className="flex justify-between items-center">
-                                <span className="font-semibold text-xl">{countOfflineDriver}</span>
-                                <div className="flex items-center justify-center rounded-full border border-white p-2 bg-white">
-                                    <UsersIcon className="w-5 h-5 text-red-500" />
-                                </div>
-                            </div>
-                        </div>
+                        <StatsCard title="Total Drivers" count={stats.total} />
+                        <StatsCard title="Busy" count={stats.busy} color="amber-500" />
+                        <StatsCard title="Free" count={stats.free} color="green-500" />
+                        <StatsCard title="Offline" count={stats.offline} color="red-500" />
                     </div>
                 </div>
             </div>
@@ -145,8 +88,8 @@ function DriverPage() {
                         <ButtonInput
                             Icon={MagnifyingGlassIcon}
                             type="text"
-                            value={searchBtn}
-                            onChange={handleSearch}
+                            value={searchTerm}
+                            onChange={handleSearchChange}
                             placeHolder="Tìm kiếm..."
                         />
                         {/* Filter */}

@@ -3,9 +3,8 @@
 import { ChangeEvent, useActionState, useEffect, useState } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
 import Link from 'next/link';
-import { signUp } from '@/app/lib/authActions';
-import clsx from 'clsx';
-import { useNotificationStore } from '../store/notificationStore';
+import { signUp } from '@/app/lib/serverActions/authActions';
+import { useNotification } from '@/app/hooks/useNotification';
 import { useRouter } from 'next/navigation';
 
 interface RegisterFormData {
@@ -17,7 +16,7 @@ interface RegisterFormData {
 
 export default function RegisterForm() {
     // Notification Store
-    const addNotification = useNotificationStore((s) => s.addNotification);
+    const addNotification = useNotification((s) => s.addNotification);
 
     // Router
     const router = useRouter();
@@ -209,10 +208,10 @@ export default function RegisterForm() {
                         <span className="font-medium">Name:</span> admin
                     </p>
                     <p>
-                        <span className="font-medium">Email:</span> admin@logistic.com
+                        <span className="font-medium">Email:</span> admin@gmail.com
                     </p>
                     <p>
-                        <span className="font-medium">Password:</span> admin123
+                        <span className="font-medium">Password:</span> Admin@123
                     </p>
                 </div>
             </div>

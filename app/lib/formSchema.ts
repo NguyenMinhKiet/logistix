@@ -1,5 +1,5 @@
-import { InstanceStatus, OrderStatus, PaymentMethod, ShipmentStatus, TransactionType } from '@prisma/client';
 import { z } from 'zod';
+import { EInstanceStatus, EOrderStatus, EPaymentMethod, EShipmentStatus, ETransactionType } from '@/app/types';
 
 // User Form Schema
 export const UserFormSchema = z.object({
@@ -56,7 +56,7 @@ export const InventoryFormSchema = z
 export const TransactionFormSchema = z
     .object({
         id: z.string().optional(),
-        type: z.enum(Object.values(TransactionType) as [string, ...string[]], {
+        type: z.enum(Object.values(ETransactionType) as [string, ...string[]], {
             message: 'Vui lòng chọn loại giao dịch.',
         }),
         productId: z.string().min(1, { message: 'Vui lòng chọn sản phẩm.' }),
@@ -78,7 +78,7 @@ export const ProductInstanceFormSchema = z
         productId: z.string().min(1, { message: 'Vui lòng chọn sản phẩm.' }),
         imei: z.string().min(1, { message: 'Vui lòng nhập số IMEI.' }).optional(),
         serial: z.string().min(1, { message: 'Vui lòng nhập số serial.' }).optional(),
-        status: z.enum(Object.values(InstanceStatus) as [string, ...string[]], {
+        status: z.enum(Object.values(EInstanceStatus) as [string, ...string[]], {
             message: 'Vui lòng chọn trạng thái hợp lệ.',
         }),
         warehouseId: z.string().min(1, { message: 'Vui lòng chọn kho.' }).optional(),
@@ -107,7 +107,7 @@ export const OrderFormSchema = z.object({
     id: z.string().optional(),
     customerId: z.string().min(1, { message: 'Vui lòng chọn khách hàng.' }),
     userId: z.string().min(1, { message: 'Vui lòng chọn người dùng.' }),
-    status: z.enum(Object.values(OrderStatus) as [string, ...string[]], {
+    status: z.enum(Object.values(EOrderStatus) as [string, ...string[]], {
         message: 'Vui lòng chọn trạng thái đơn hàng hợp lệ.',
     }),
     total: z.coerce.number().gt(0, { message: 'Tổng tiền phải lớn hơn 0.' }),
@@ -127,7 +127,7 @@ export const PaymentFormSchema = z.object({
     id: z.string().optional(),
     orderId: z.string().min(1, { message: 'Vui lòng chọn đơn hàng.' }).optional(),
     amount: z.coerce.number().gt(0, { message: 'Số tiền phải lớn hơn 0.' }),
-    method: z.enum(Object.values(PaymentMethod) as [string, ...string[]], {
+    method: z.enum(Object.values(EPaymentMethod) as [string, ...string[]], {
         message: 'Vui lòng chọn phương thức thanh toán.',
     }),
 });
@@ -139,7 +139,7 @@ export const ShipmentFormSchema = z.object({
     driverId: z.string().min(1, { message: 'Vui lòng chọn tài xế.' }).optional(),
     vehicleId: z.string().min(1, { message: 'Vui lòng chọn phương tiện.' }).optional(),
     routeId: z.string().min(1, { message: 'Vui lòng chọn tuyến đường.' }).optional(),
-    status: z.enum(Object.values(ShipmentStatus) as [string, ...string[]], {
+    status: z.enum(Object.values(EShipmentStatus) as [string, ...string[]], {
         message: 'Vui lòng chọn trạng thái giao hàng hợp lệ.',
     }),
     tracking: z.string().min(1, { message: 'Vui lòng nhập mã theo dõi.' }).optional(),

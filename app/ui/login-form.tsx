@@ -3,10 +3,9 @@
 import { ChangeEvent, useActionState, useEffect, useState } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
 import Link from 'next/link';
-import { signIn } from '@/app/lib/authActions';
-import clsx from 'clsx';
+import { signIn } from '@/app/lib/serverActions/authActions';
 import { useRouter } from 'next/navigation';
-import { useNotificationStore } from '../store/notificationStore';
+import { useNotification } from '@/app/hooks/useNotification';
 
 interface LoginFormData {
     email: string;
@@ -14,7 +13,7 @@ interface LoginFormData {
 }
 
 export default function LoginForm() {
-    const addNotification = useNotificationStore((s) => s.addNotification);
+    const addNotification = useNotification((s) => s.addNotification);
     const router = useRouter();
     const [state, formAction, isPending] = useActionState(signIn, undefined);
     const [showPassword, setShowPassword] = useState(false);

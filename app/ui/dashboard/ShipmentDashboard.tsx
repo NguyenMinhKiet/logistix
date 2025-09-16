@@ -34,10 +34,13 @@ import {
 } from 'recharts';
 import Image from 'next/image';
 import CardWrapper from '@/app/ui/dashboard/CardWrapper';
-import Select from '@/app/ui/buttons/Select';
+import Select from '@/app/ui/buttons/SelectInput';
 import clsx from 'clsx';
 import { wrapper } from '@/app/styles/classes';
-import Breadcrumb from '@/app/ui/Breadcrumb';
+import Breadcrumb from '@/app/ui/common/Breadcrumb';
+import { Driver, DriverBadge } from '@prisma/client';
+import { useDrivers } from '@/app/context/DriverContext';
+import { ShipmentStatus } from '@/app/lib/definitions';
 
 function CustomTooltip({ active, payload, label }: any) {
     if (active && payload && payload.length) {
@@ -56,11 +59,21 @@ function CustomTooltip({ active, payload, label }: any) {
     return null;
 }
 
-type ShipmentDashboardProps = {
-    user: { id: string; name: string; role: string } | null;
-};
+export default function ShipmentDashboard() {
+    const { drivers } = useDrivers();
 
-export default function ShipmentDashboard({ user }: ShipmentDashboardProps) {
+    const [countFreeDriver, setCountFreeDriver] = useState(0);
+    const [countBusyDriver, setCountBusyDriver] = useState(0);
+    const [countTotalDriver, setCountTotalDriver] = useState(0);
+    const [countOfflineDriver, setCountOfflineDriver] = useState(0);
+
+    useEffect(() => {
+        setCountTotalDriver(drivers.length);
+        setCountBusyDriver(drivers.filter((driver) => driver.badge === DriverBadge.BUSY).length);
+        setCountFreeDriver(drivers.filter((driver) => driver.badge === DriverBadge.FREE).length);
+        setCountOfflineDriver(drivers.filter((driver) => driver.badge === DriverBadge.OFFLINE).length);
+    }, [drivers]);
+
     const [searchBtn, setSearchBtn] = useState('');
 
     // Time
@@ -103,7 +116,7 @@ export default function ShipmentDashboard({ user }: ShipmentDashboardProps) {
         { month: 'Dec', Delivered: 400, OnDelivery: 80, Pending: 35 },
     ];
 
-    const steps = ['Order Placed', 'In Transit', 'Customs', 'Out of Delivery', 'Delivered'];
+    const steps: string[] = Object.values(ShipmentStatus);
 
     const cardData = [
         {
@@ -149,7 +162,7 @@ export default function ShipmentDashboard({ user }: ShipmentDashboardProps) {
                         <div className="flex flex-col shadow-md rounded-xl p-2 px-3 w-52 bg-white/50 text-black">
                             <h1 className="text-gray-700">Total Drivers</h1>
                             <div className="flex justify-between items-center">
-                                <span className="font-semibold text-xl">30</span>
+                                <span className="font-semibold text-xl">{countTotalDriver}</span>
                                 <div className="flex items-center justify-center rounded-full border border-white p-2 bg-white">
                                     <UsersIcon className="w-5 h-5" />
                                 </div>
@@ -159,7 +172,7 @@ export default function ShipmentDashboard({ user }: ShipmentDashboardProps) {
                         <div className="flex flex-col shadow-md rounded-xl p-2 px-3 w-52 bg-white/50 text-black">
                             <h1 className="text-gray-700">Busy</h1>
                             <div className="flex justify-between items-center">
-                                <span className="font-semibold text-xl">30</span>
+                                <span className="font-semibold text-xl">{countBusyDriver}</span>
                                 <div className="flex items-center justify-center rounded-full border border-white p-2 bg-white">
                                     <UsersIcon className="w-5 h-5 text-amber-500" />
                                 </div>
@@ -169,7 +182,17 @@ export default function ShipmentDashboard({ user }: ShipmentDashboardProps) {
                         <div className="flex flex-col shadow-md rounded-xl p-2 px-3 w-52 bg-white/50 text-black">
                             <h1 className="text-gray-700">Free</h1>
                             <div className="flex justify-between items-center">
-                                <span className="font-semibold text-xl">30</span>
+                                <span className="font-semibold text-xl">{countFreeDriver}</span>
+                                <div className="flex items-center justify-center rounded-full border border-white p-2 bg-white">
+                                    <UsersIcon className="w-5 h-5 text-green-500" />
+                                </div>
+                            </div>
+                        </div>
+                        {/* Card */}
+                        <div className="flex flex-col shadow-md rounded-xl p-2 px-3 w-52 bg-white/50 text-black">
+                            <h1 className="text-gray-700">Offline</h1>
+                            <div className="flex justify-between items-center">
+                                <span className="font-semibold text-xl">{countOfflineDriver}</span>
                                 <div className="flex items-center justify-center rounded-full border border-white p-2 bg-white">
                                     <UsersIcon className="w-5 h-5 text-green-500" />
                                 </div>

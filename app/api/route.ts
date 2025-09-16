@@ -1,5 +1,5 @@
 import { verifySession } from '@/app/lib/dataAccessLayer';
-import { Role } from '../types';
+import { ERole } from '../types';
 
 export async function GET() {
     // User authentication and role verification
@@ -12,7 +12,7 @@ export async function GET() {
     }
 
     // Check if the user has the 'admin' role
-    if (session.userRole !== Role.ADMIN) {
+    if (session.userRole !== ERole.ADMIN) {
         // User is authenticated but does not have the right permissions
         return new Response(null, { status: 403 });
     }

@@ -12,18 +12,18 @@ import {
 import Image from 'next/image';
 import clsx from 'clsx';
 import { badgeBorderColors, badgeBorderTextColors, badgeIcons, wrapper } from '../styles/classes';
-import { Driver, DriverBadge } from '@prisma/client';
 import { JSX, useState } from 'react';
 import ConfirmDialog from './modals/ConfirmDialog';
 import { useDrivers } from '../context/DriverContext';
 import EditDriverModal from './modals/EditDriverModal';
+import { Driver } from '@/app/types';
 
 type DriverCardProps = {
     driver: Driver;
 };
 
 function DriverCard({ driver }: DriverCardProps) {
-    const { deleteDriverContext } = useDrivers();
+    const { deleteDriver } = useDrivers();
 
     const [showActions, setShowActions] = useState(false);
     const [showConfirmDialog, setShowConfirmDialog] = useState(false);
@@ -31,7 +31,7 @@ function DriverCard({ driver }: DriverCardProps) {
 
     const handleDelete = async () => {
         setShowConfirmDialog(false);
-        await deleteDriverContext(driver.id);
+        await deleteDriver(driver.id);
     };
 
     return (

@@ -1,10 +1,10 @@
 'use client';
 
-import { useNotificationStore } from '../store/notificationStore';
+import { useNotification } from '@/app/hooks/useNotification';
 import { useEffect } from 'react';
 
 function ToastContainer() {
-    const { notifications, removeNotification } = useNotificationStore();
+    const { notifications, removeNotification } = useNotification();
 
     useEffect(() => {
         if (notifications.length > 0) {

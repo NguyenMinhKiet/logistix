@@ -1,17 +1,19 @@
 'use client';
-import { createDriver } from '@/app/lib/actions/driverActions';
-import { DriverBadge, Shipment } from '@prisma/client';
-import Image from 'next/image';
+
 import { ChangeEvent, useActionState, useEffect, useRef, useState } from 'react';
 import { useDrivers } from '@/app/context/DriverContext';
 import Modal from './Modal';
-import { useNotificationStore } from '@/app/store/notificationStore';
+import { useNotification } from '@/app/hooks/useNotification';
+import { EDriverStatus } from '@/app/types';
+import { createDriver } from '@/app/lib/serverActions/driverActions';
+import { ImageUpload } from '../form/ImageUpload';
+import { SelectInput } from '../buttons/SelectInput';
 
 interface DriverFormData {
     name: string;
     imageUrl?: string;
     phone: string;
-    badge: DriverBadge;
+    badge: EDriverStatus;
     license?: string;
     vehicleId?: string;
 }
@@ -25,11 +27,13 @@ function AddDriverModal({ isModalOpen = false, onClose }: AddDriverModalProps) {
     if (!isModalOpen) return null;
 
     // Notification Store
-    const addNotification = useNotificationStore((s) => s.addNotification);
+    const addNotification = useNotification((s) => s.addNotification);
 
     const [state, formAction, isPending] = useActionState(createDriver, undefined);
-    const { addDriverContext } = useDrivers();
+    const { addDriver } = useDrivers();
     const [previewImage, setPreviewImage] = useState('/nguyenminhkiet.JPG');
+
+    const [file, setFile] = useState<File | undefined>();
     const [imageFile, setImageFile] = useState<string>('');
 
     const [formData, setFormData] = useState<DriverFormData>({
@@ -37,12 +41,19 @@ function AddDriverModal({ isModalOpen = false, onClose }: AddDriverModalProps) {
         phone: '',
         license: '',
         vehicleId: '',
-        badge: DriverBadge.FREE,
+        badge: EDriverStatus.FREE,
     });
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
         setFormData((prev) => ({ ...prev, [name]: value }));
+    };
+
+    const handleImageChange = (newFile: File) => {
+        setFile(newFile); // giữ file thực tế
+        const previewUrl = URL.createObjectURL(newFile);
+        setPreviewImage(previewUrl); // preview
+        setImageFile(previewUrl); // nếu cần gửi lên form hidden
     };
 
     useEffect(() => {
@@ -60,7 +71,7 @@ function AddDriverModal({ isModalOpen = false, onClose }: AddDriverModalProps) {
             formRef.current?.reset(); // reset input
             setPreviewImage('/nguyenminhkiet.JPG'); // reset ảnh
             if (state.data) {
-                addDriverContext(state.data);
+                addDriver(state.data);
             }
             onClose();
         }
@@ -75,7 +86,12 @@ function AddDriverModal({ isModalOpen = false, onClose }: AddDriverModalProps) {
             children={
                 <form ref={formRef} action={formAction} className="space-y-4 sm:space-y-6">
                     {/* Image Preview */}
-                    <div className="flex items-center justify-center py-2 relative">
+                    <ImageUpload
+                        previewImage={previewImage}
+                        imageFile={imageFile || previewImage}
+                        onImageChange={handleImageChange}
+                    />
+                    {/* <div className="flex items-center justify-center py-2 relative">
                         <div className="border rounded-xl p-2 ">
                             {previewImage && (
                                 <Image
@@ -116,7 +132,7 @@ function AddDriverModal({ isModalOpen = false, onClose }: AddDriverModalProps) {
                                 <p className="mt-1 text-xs sm:text-sm text-red-600">{state?.errors?.imageUrl}</p>
                             )}
                         </div>
-                    </div>
+                    </div> */}
 
                     {/* Email Input */}
                     <div>
@@ -196,26 +212,32 @@ function AddDriverModal({ isModalOpen = false, onClose }: AddDriverModalProps) {
                     </div>
 
                     {/* Select Vehicle */}
-                    <div>
-                        <label
-                            htmlFor="vehicleId"
-                            className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2"
-                        >
-                            Vehicle
-                        </label>
-                        <select
-                            id="vehicleId"
-                            name="vehicleId"
-                            value={formData.badge ?? ''}
-                            onChange={handleChange}
-                            className={`w-full px-3 sm:px-4 py-2 sm:py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-sm sm:text-base border-gray-300 hover:border-gray-400`}
-                        >
-                            <option value="">Select a vehicle</option>
-                            <option value="vehicle1">Vehicle 1</option>
-                            <option value="vehicle2">Vehicle 2</option>
-                            <option value="vehicle3">Vehicle 3</option>
-                        </select>
-                    </div>
+                    <SelectInput
+                        id="vehicleId"
+                        label="Vehicle"
+                        value={formData.vehicleId ?? ''}
+                        onChange={(val) => setFormData({ ...formData, vehicleId: val })}
+                        options={[
+                            { value: '', label: 'Select a vehicle' },
+                            { value: 'vehicle1', label: 'Vehicle 1' },
+                            { value: 'vehicle2', label: 'Vehicle 2' },
+                            { value: 'vehicle3', label: 'Vehicle 3' },
+                        ]}
+                    />
+
+                    {/* Select Badge */}
+                    <SelectInput
+                        id="badge"
+                        label="Badge Status"
+                        value={formData.badge}
+                        onChange={(val) => setFormData({ ...formData, badge: val as EDriverStatus })}
+                        options={[
+                            { value: '', label: 'Select a Badge' },
+                            { value: EDriverStatus.FREE, label: 'FREE' },
+                            { value: EDriverStatus.BUSY, label: 'BUSY' },
+                            { value: EDriverStatus.OFFLINE, label: 'OFFLINE' },
+                        ]}
+                    />
 
                     {/* Submit Button */}
                     <button

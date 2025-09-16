@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { useNotificationStore } from './app/store/notificationStore';
+import { useNotificationStore } from './app/hooks/useNotification';
 
 // Middleware chính
 export function middleware(request: NextRequest) {

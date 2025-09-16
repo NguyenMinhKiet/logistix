@@ -5,7 +5,7 @@ import { redirect } from 'next/navigation';
 
 import { db } from '@/app/lib/db';
 
-import { ShipmentStatus } from '@/app/types';
+import { EShipmentStatus } from '@/app/types';
 
 // Shipment Form Schema
 export const ShipmentFormSchema = z.object({
@@ -14,7 +14,7 @@ export const ShipmentFormSchema = z.object({
     driverId: z.string().min(1, { message: 'Please select a driver.' }).optional(),
     vehicleId: z.string().min(1, { message: 'Please select a vehicle.' }).optional(),
     routeId: z.string().min(1, { message: 'Please select a route.' }).optional(),
-    status: z.enum(Object.values(ShipmentStatus) as [string, ...string[]], {
+    status: z.enum(Object.values(EShipmentStatus) as [string, ...string[]], {
         message: 'Please select a valid shipment status.',
     }),
     tracking: z.string().min(1, { message: 'Please enter a tracking code.' }).optional(),
@@ -53,7 +53,7 @@ export async function createShipment(prevState: State, formData: FormData) {
                 driverId,
                 vehicleId,
                 routeId,
-                status: status as ShipmentStatus,
+                status: status as EShipmentStatus,
                 tracking,
             },
         });

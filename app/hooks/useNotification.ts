@@ -14,7 +14,7 @@ type NotificationState = {
 
 let id = 0;
 
-export const useNotificationStore = create<NotificationState>((set) => ({
+export const useNotification = create<NotificationState>((set) => ({
     notifications: [],
     addNotification: (message, type = 'info') =>
         set((state) => ({

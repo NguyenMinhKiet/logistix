@@ -1,6 +1,8 @@
 import SideNav from '@/app/ui/dashboard/sidenav';
 import clsx from 'clsx';
 import { Metadata } from 'next';
+import { DriverProvider } from '@/app/context/DriverContext';
+import { getDrivers } from '@/app/lib/serverActions/driverActions';
 
 export const experimental_ppr = true;
 
@@ -13,15 +15,19 @@ export const metadata: Metadata = {
     metadataBase: new URL('https://next-learn-dashboard.vercel.sh'),
 };
 
-export default function Layout({ children }: { children: React.ReactNode }) {
+export default async function Layout({ children }: { children: React.ReactNode }) {
+    const drivers = await getDrivers();
+
     return (
-        <div className="flex h-screen flex-col md:flex-row transition-all duration-500 ease-in-out relative overflow-auto">
-            <div className={clsx(` flex-none md:h-full w-full md:w-64`)}>
-                <SideNav />
+        <DriverProvider initialDrivers={drivers}>
+            <div className="flex h-screen flex-col md:flex-row transition-all duration-500 ease-in-out relative overflow-auto">
+                <div className={clsx(` flex-none md:h-full w-full md:w-64`)}>
+                    <SideNav />
+                </div>
+                <div className="flex-grow md:overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+                    {children}
+                </div>
             </div>
-            <div className="flex-grow md:overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-                {children}
-            </div>
-        </div>
+        </DriverProvider>
     );
 }

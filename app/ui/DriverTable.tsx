@@ -9,20 +9,26 @@ import { badgeBorderTextColors, wrapper } from '../styles/classes';
 import ConfirmDialog from './modals/ConfirmDialog';
 import { useDrivers } from '../context/DriverContext';
 import EditDriverModal from './modals/EditDriverModal';
-import { Driver } from '@prisma/client';
+import { Driver } from '../types';
+import { useNotification } from '../hooks/useNotification';
+import {
+    deleteDriver as deleteDriverServer,
+    deleteDrivers as deleteDriversServer,
+} from '../lib/serverActions/driverActions';
 
 type DriverTableProps = {
     drivers: Driver[];
     filterBy?: ('name' | 'phone' | 'badge' | '')[];
 };
 function DriverTable({ drivers, filterBy }: DriverTableProps) {
+    const addNotification = useNotification((s) => s.addNotification);
     const [selectAll, setSelectAll] = useState(false);
     const [selected, setSelected] = useState<{ id: string; name: string }[]>([]);
     const [selectOne, setSelectOne] = useState<{ id: string; name: string } | null>(null);
     const [showConfirmDialogAll, setShowConfirmDialogAll] = useState(false);
     const [showConfirmDialog, setShowConfirmDialog] = useState(false);
     const [editingDriver, setEditingDriver] = useState<Driver>();
-    const { deleteDriverContext } = useDrivers();
+    const { deleteDriver } = useDrivers();
 
     const handleSelectAll = () => {
         if (selectAll) {
@@ -49,13 +55,29 @@ function DriverTable({ drivers, filterBy }: DriverTableProps) {
     }, [selected, drivers.length]);
 
     const handleDelete = () => {
-        if (selected) {
-            selected.map(async (selected) => {
-                setSelected([]);
-                setShowConfirmDialog(false);
-                await deleteDriverContext(selected.id);
+        if (selected.length === 0) return;
+
+        // Xoá trong context (UI cập nhật ngay)
+        selected.forEach((s) => {
+            deleteDriver(s.id);
+        });
+
+        // Clear UI state
+        setSelected([]);
+        setShowConfirmDialog(false);
+
+        // Gọi server async, không chờ kết quả
+        deleteDriversServer(selected.map((s) => s.id))
+            .then((deleted) => {
+                if (deleted.success) {
+                    addNotification(deleted.message || 'Xóa thành công', 'success');
+                } else {
+                    addNotification(deleted.message || 'Xóa thất bại', 'error');
+                }
+            })
+            .catch(() => {
+                addNotification('Có lỗi xảy ra khi xóa tài xế', 'error');
             });
-        }
     };
 
     return (
@@ -112,7 +134,8 @@ function DriverTable({ drivers, filterBy }: DriverTableProps) {
                                 <td className="py-4 px-6">
                                     <Image
                                         alt="Driver Image"
-                                        src={`/${driver.imageUrl}` || '/nguyenminhkiet.JPG'}
+                                        src={'/nguyenminhkiet.JPG'}
+                                        // src={`/${driver.imageUrl}` || '/nguyenminhkiet.JPG'}
                                         width={100}
                                         height={150}
                                         className="w-[100px] h-[150px]  rounded-xl  object-cover"
@@ -174,9 +197,17 @@ function DriverTable({ drivers, filterBy }: DriverTableProps) {
                 data={selectOne ? [selectOne] : []}
                 confirmText="Xoá"
                 cancelText="Huỷ"
-                onConfirm={() => {
+                onConfirm={async () => {
                     if (selectOne) {
-                        deleteDriverContext(selectOne.id);
+                        // Context
+                        deleteDriver(selectOne.id);
+                        // Server
+                        const deleted = await deleteDriverServer(selectOne.id);
+                        if (deleted.success) {
+                            addNotification(deleted.message || `Xóa thành công`, 'success');
+                        } else {
+                            addNotification(deleted.message || 'Xóa thất bại', 'error');
+                        }
                         setSelectOne(null);
                     }
                     setShowConfirmDialog(false);
